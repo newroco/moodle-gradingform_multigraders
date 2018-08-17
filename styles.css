@@ -1,0 +1,160 @@
+ .gradingform_multigraders-regrade {
+    padding: 10px;
+    background: #fdd;
+    border: 1px solid #f00;
+    margin-bottom: 10px;
+}
+
+ .gradingform_multigraders-restored {
+    padding: 10px;
+    background: #ffd;
+    border: 1px solid #ff0;
+    margin-bottom: 10px;
+}
+
+ .gradingform_multigraders-error {
+    color: red;
+    font-weight: bold;
+     float: left;
+ }
+ .gradingform_multigraders-notice {
+     padding: 10px;
+     background: #FCF8E3;
+     margin-bottom: 10px;
+ }
+
+ .gradingform_multigraders_editform .status {
+    font-weight: normal;
+    text-transform: uppercase;
+    font-size: 60%;
+    padding: 0.25em;
+    border: 1px solid #eee;
+}
+
+ .gradingform_multigraders_editform .status.ready {
+    background-color: #e7f1c3;
+    border-color: #aea;
+}
+
+ .gradingform_multigraders_editform .status.draft {
+    background-color: #f3f2aa;
+    border-color: #ee2;
+}
+ .gradingform_multigraders .instance_details{
+
+ }
+ .gradingform_multigraders .instance_details.highlight_red{
+    color: red;
+ }
+ .gradingform_multigraders .instance_details.highlight_green{
+     color: green;
+ }
+
+ .multigraders_grade {
+     background: #fff;
+     border-bottom: 1px solid #01325F;
+     padding: 5px;
+     margin-bottom: 5px !important;
+     position: relative;
+ }
+ .multigraders_grade .grade-wrap::after{
+     content: "";
+     display: table;
+     clear: both;
+ }
+ .multigraders_grade:hover {
+     background-color: #f5f5f5;
+ }
+ .multigraders_grade.finalGrade {
+     background: #cfefcf;
+ }
+ .multigraders_grade .grade-wrap{
+     width: 100%;
+     margin-bottom: 5px;
+ }
+ .multigraders_grade div.grade{
+     height: 3em;
+     float: left;
+     width: 3.5em;
+ }
+ .multigraders_grade div.grade input{
+     width: 3em;
+     text-align: right;
+     float: left;
+     border-radius: 0;
+     padding: 1px;
+     margin: 0;
+ }
+ .multigraders_grade span.grade_range{
+     float: left;
+     color: #999;
+     font-size: 12px;
+ }
+ .multigraders_grade .grade_feedback{
+     width: 95%;
+     min-width: 180px;
+ }
+ .multigraders_grade .grade_feedback textarea{
+     width: 97%;
+     max-width: 97%;
+     min-width: 97%;
+     margin: 0;
+     min-height: 80px;
+ }
+ .multigraders_grade .grade-outcomes{
+     clear: both;
+ }
+ .multigraders_grade .outcome .outcome_value{
+     font-weight: bold;
+ }
+
+ .multigraders_grade .edit_button{
+     width: 20px;
+     background: transparent url([[pix:i/edit]]) no-repeat center top;
+     -webkit-filter: invert(20);
+     -moz-filter: invert(20);
+     -o-filter: invert(20);
+     -ms-filter: invert(20));
+     filter: invert(20);
+     margin-top: 4px;
+     line-height: 0;
+     color: transparent;
+     display: block;
+     float: left;
+     height: 3em;
+ }
+ .multigraders_grade .edit_button.active{
+     -webkit-filter: unset;
+     -moz-filter: unset;
+     -o-filter: unset;
+     -ms-filter: unset);
+     filter: unset;
+ }
+ .multigraders_grade .grader{
+     float: left;
+     min-width: 80px;
+     padding-right: 5px;
+ }
+ .multigraders_grade .grader_name{
+     color:#01325F;
+ }
+ .multigraders_grade .timestamp{
+
+     float: left;
+     min-width: 80px;
+     color: #666;
+ }
+ .multigraders_grade .visible_to_students{
+ }
+ .multigraders_grade.review .grader{
+     top: 1.8em;
+     width: 29%;
+ }
+ .multigraders_grade.review div.grade{
+     height: auto;
+     width: auto;
+     float:none;
+ }
+ .multigraders_grade.review .grade_feedback{
+     clear: both;
+ }

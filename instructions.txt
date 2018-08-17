@@ -1,0 +1,23 @@
+How to install:
+
+Extract the "multigraders" folder from archive into /<your moodle folder>/grade/grading/form/
+From admin dashboard, check for updates, approve the installation of the new plugin it discovers.
+
+How to activate:
+
+When editing the settings of an assignment, open the grade section and for "Grading method" choose "Multiple graders". 
+When you save the assignment settings, you will be asked to define the marking guide for this assignment. You can also define marking guides from Administration menu 
+section -> Assignment administration ->Advanced grading-> Define marking guide. When defining a new guide, you are asked about how many graders are needed before the 
+final grade is decided and how the final grade is calculated. For deciding the final grade at the moment the only possible option is that one more teacher needs to decide 
+after the number specified of graders have added a grade and feedback. More options later.
+
+How it works:
+
+Any teacher or admin may grade and add feedback for an assignment using multiple graders. Other types of users can only see the final grade, if awarded. 
+Graders may change their grade only if the final has not been awarded yet. When the defined number of graders is met, another grader may award the final one by looking at 
+the grades and feedback from the previous graders. When the final is awarded, it is copied to the grade book, however the final grade can still be changed by this last grader 
+or by any other administrator on the condition that they haven't graded the item already.
+
+
+
+
