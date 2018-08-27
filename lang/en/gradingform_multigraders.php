@@ -64,6 +64,7 @@ $string['auto_calculate_final_method_1'] = 'minimum previous grade' ;
 $string['auto_calculate_final_method_2'] = 'maximum previous grade' ;
 $string['auto_calculate_final_method_3'] = 'average over previous grades' ;
 $string['visible_to_students'] = 'Show feedback to student?' ;
+$string['feedback_label'] = 'Feedback notes' ;
 $string['previewdefinition'] = 'Preview definition';
 $string['restoredfromdraft'] = 'NOTE: The last attempt to grade this person was not saved properly so draft grades have been restored.';
 $string['timestamp_format'] = 'd/m/Y H:i:s';

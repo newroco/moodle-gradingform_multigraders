@@ -409,7 +409,12 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         $timeDiv = html_writer::tag('div',$time , array('class' => 'timestamp'));
         $gradeWrapDiv = html_writer::tag('div', $gradeDiv . $editButton . $userDetails . $timeDiv, array('class' => 'grade-wrap'));
         //feedback
+        $atts = array(
+            'for' => $this->elementName.'_feedback_'.$record->grader,
+            'class' => 'col-form-label d-inline');
+        $feedbackLabel = html_writer::tag('label', get_string('feedback_label', 'gradingform_multigraders'), $atts);
         $atts = array('rows' => '3',
+            'id' => $this->elementName.'_feedback_'.$record->grader,
             'name' => $this->elementName.'[feedback]',
             'class' => 'grader_feedback');
         $feedback = html_writer::tag('textarea', $record->feedback, array_merge($atts,$commonAtts));
@@ -420,7 +425,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                 'class' => 'copy_button');
             $copyButton = html_writer::tag('a', get_string('clicktocopy', 'gradingform_multigraders'), $atts);
         }
-        $feedbackDiv = html_writer::tag('div', $feedback . $copyButton, array('class' => 'grade_feedback'));
+        $feedbackDiv = html_writer::tag('div', $feedbackLabel. $feedback . $copyButton, array('class' => 'grade_feedback'));
         //show to students
         if($this->options->show_intermediary_to_students) {
             $atts = array(

@@ -29,10 +29,10 @@ M.gradingform_multigraders.init = function(Y, options) {
         //Y.one('#id_assignfeedbackcomments_editoreditable').setAttribute('contenteditable','false');
 
         //hide elements that should not be editable by intermediary graders
-        while(currentGradeContainer && currentGradeContainer.next()){
+        /*while(currentGradeContainer && currentGradeContainer.next()){
             currentGradeContainer = currentGradeContainer.next();
             currentGradeContainer.setStyle('display','none');
-        }
+        }*/
     }else{
         //copy values from final outcomes to core outcomes
         Y.all('.multigraders_grade.finalGrade .outcome select').each(function(node,index){
@@ -51,11 +51,11 @@ M.gradingform_multigraders.init = function(Y, options) {
             });
         });
     }
-    if(!this.user_is_allowed_edit){
+    /*if(!this.user_is_allowed_edit){
         Y.all('div[data-region="grade-actions"] button').set('disabled','disabled');
     }else{
         Y.all('div[data-region="grade-actions"] button').removeAttribute('disabled');
-    }
+    }*/
 
     Y.all('.multigraders_grade .edit_button').on('click', function(e) {
         if(Y.one(e.currentTarget).ancestor(".multigraders_grade").one('input,textarea').hasAttribute('disabled')) {

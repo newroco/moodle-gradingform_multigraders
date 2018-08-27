@@ -42,8 +42,7 @@ class restore_gradingform_multigraders_plugin extends restore_gradingform_plugin
 
         $paths = array();
 
-        $paths[] = new restore_path_element('gradingform_multigraders_definitions',
-            $this->get_pathfor('/definitions/definition'));
+        $paths[] = new restore_path_element('gradingform_multigraders_definition',$this->get_pathfor('/'));
 
         return $paths;
     }
@@ -57,16 +56,16 @@ class restore_gradingform_multigraders_plugin extends restore_gradingform_plugin
 
         $paths = array();
 
-        $paths[] = new restore_path_element('gradingform_multigraders_grades',
+        $paths[] = new restore_path_element('gradingform_multigraders_grade',
             $this->get_pathfor('/grades/grade'));
 
         return $paths;
     }
 
     /**
-     * Processes criterion element data
+     * Processes definition element data
      *
-     * Sets the mapping 'gradingform_multigraders_criterion' to be used later by
+     * Sets the mapping 'radingform_multigraders_definition' to be used later by
      * {@link self::process_gradinform_multigraders_grade()}
      *
      * @param array|stdClass $data
@@ -76,25 +75,26 @@ class restore_gradingform_multigraders_plugin extends restore_gradingform_plugin
 
         $data = (object)$data;
         $oldid = $data->id;
-        $data->id = $this->get_new_parentid('gradingform_multigraders_definitions');
+        $data->id = $this->get_new_parentid('grading_definition');
 
-        $newid = $DB->insert_record('gradingform_multigraders_definitions', $data);
-        $this->set_mapping('gradingform_multigraders_definitions', $oldid, $newid);
+        $newid = $DB->insert_record_raw('multigraders_definitions', $data,true,false,true);
+        $this->set_mapping('gradingform_multigraders_definition', $oldid, $newid);
     }
-
 
     /**
      * Processes filling element data
      *
      * @param array|stdClass $data The data to insert as a filling
      */
-    public function process_gradinform_multigraders_grade($data) {
+    public function process_gradingform_multigraders_grade($data) {
         global $DB;
 
         $data = (object)$data;
-        $data->instanceid = $this->get_new_parentid('gradingform_multigraders_grades');
-        $data->id = $this->get_mappingid('gradingform_multigraders_grades', $data->id);
+        $data->instanceid = $this->get_new_parentid('grading_instance');
+        $instance = $DB->get_record('grading_instances',array('id'  => $data->instanceid), '*', IGNORE_MISSING);
+        //$instance = $this->get_mapping('grading_instance', $data->instanceid);
+        $data->itemid = $instance->itemid;
 
-        $DB->insert_record('gradingform_multigraders_grades', $data);
+        $DB->insert_record('multigraders_grades', $data);
     }
 }
