@@ -15,7 +15,7 @@ M.gradingform_multigraders.init = function(Y, options) {
         this.user_is_allowed_edit = true;
     }
     this.number_of_grades = Y.all('.multigraders_grade').size();
-    console.log('init multigraders ' + this.grading_final + '  ' + this.user_is_allowed_edit + '  ' + this.number_of_grades);
+    //console.log('init multigraders ' + this.grading_final + '  ' + this.user_is_allowed_edit + '  ' + this.number_of_grades);
     //hide global outcomes
     var advancedGradeContainer = Y.one('.gradingform_multigraders').ancestor('.fitem');
     var currentGradeContainer = Y.one('.currentgrade').ancestor('.fitem');
@@ -51,11 +51,11 @@ M.gradingform_multigraders.init = function(Y, options) {
             });
         });
     }
-    /*if(!this.user_is_allowed_edit){
+    if(!this.user_is_allowed_edit){
         Y.all('div[data-region="grade-actions"] button').set('disabled','disabled');
     }else{
         Y.all('div[data-region="grade-actions"] button').removeAttribute('disabled');
-    }*/
+    }
 
     Y.all('.multigraders_grade .edit_button').on('click', function(e) {
         if(Y.one(e.currentTarget).ancestor(".multigraders_grade").one('input,textarea').hasAttribute('disabled')) {
@@ -130,9 +130,9 @@ M.gradingform_multigraders.nl2br = function(str) {
     return (str + '').replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1' + breakTag + '$2');
 }
 M.gradingform_multigraders.updateGrade = function(element) {
-    var formula = Y.one(element).ancestor(".multigraders_grade").one('input.grade').getAttribute('data-formula');
-    var gradeRangeMin = parseInt(Y.one(element).ancestor(".multigraders_grade").one('input.grade').getAttribute('data-grade-range-min'),10);
-    var gradeRangeMax = parseInt(Y.one(element).ancestor(".multigraders_grade").one('input.grade').getAttribute('data-grade-range-max'),10);
+    var formula = Y.one(element).ancestor(".multigraders_grade").one('input.grade,select.grade').getAttribute('data-formula');
+    var gradeRangeMin = parseInt(Y.one(element).ancestor(".multigraders_grade").one('input.grade,select.grade').getAttribute('data-grade-range-min'),10);
+    var gradeRangeMax = parseInt(Y.one(element).ancestor(".multigraders_grade").one('input.grade,select.grade').getAttribute('data-grade-range-max'),10);
     var grade;
     if(!formula){
         return;
@@ -150,7 +150,7 @@ M.gradingform_multigraders.updateGrade = function(element) {
     });
     //replace non existing outcomes in the formula
     formula = formula.replace(/##gi(\d+)##/gi,0);
-    Y.one(element).ancestor(".multigraders_grade").one('input.grade').set("title", formula);
+    Y.one(element).ancestor(".multigraders_grade").one('input.grade,select.grade').set("title", formula);
     formula = formula.replace('=sum','');
     try {
         grade = eval(formula);
@@ -163,5 +163,25 @@ M.gradingform_multigraders.updateGrade = function(element) {
     }else{
         grade = grade.toFixed(1);
     }
-    Y.one(element).ancestor(".multigraders_grade").one('input.grade').set("value", grade);
+    var gradeElement = Y.one(element).ancestor(".multigraders_grade").one('input.grade,select.grade');
+    var tag = gradeElement.get('tagName');
+    if(tag == 'SELECT'){
+        //check if the computed grade matches one of the values in the select
+        var selectedGrade = null;
+        gradeElement.get("options").each( function() {
+            if(selectedGrade){
+                return;
+            }
+            var value  = this.get('value');
+            var intVal = parseInt(this.get('text'),10);
+            if(intVal <= grade){
+                gradeElement.set("value", value);
+                selectedGrade = intVal;
+                return;
+            }
+
+        });
+    }else {
+        gradeElement.set("value", grade);
+    }
 }

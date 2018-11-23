@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Rubric editor page
+ * Editor page
  *
  * @package     gradingform_multigraders
  * @copyright   2018 Lucian Pricop <contact@lucianpricop.com>

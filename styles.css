@@ -15,7 +15,7 @@
  .gradingform_multigraders-error {
     color: red;
     font-weight: bold;
-     float: left;
+     /*float: left;*/
  }
  .gradingform_multigraders-notice {
      padding: 10px;
@@ -77,13 +77,18 @@
      float: left;
      width: 3.5em;
  }
- .multigraders_grade div.grade input{
+ .multigraders_grade div.grade input,
+ .multigraders_grade div.grade select{
      width: 3em;
      text-align: right;
      float: left;
      border-radius: 0;
      padding: 1px;
      margin: 0;
+ }
+ .multigraders_grade div.grade select{
+     width: 3.3em;
+     text-align: left;
  }
  .multigraders_grade span.grade_range{
      float: left;

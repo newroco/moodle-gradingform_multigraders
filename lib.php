@@ -357,6 +357,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
         if (!isset($this->definition->description)) {
             return '';
         }
+
         $context = $this->get_context();
 
         $formatoptions = array(
@@ -365,7 +366,8 @@ class gradingform_multigraders_controller extends gradingform_controller {
             'filter' => true,
             'context' => $context
         );
-        $text = $this->definition->description;
+        $text = get_string('pluginname','gradingform_multigraders');
+        $text .= "\n".$this->definition->description;
         if(isset($this->definition->secondary_graders_id_list) &&
             $this->definition->secondary_graders_id_list != ''){
             //transform list of grader ids into name list
@@ -437,12 +439,22 @@ class gradingform_multigraders_controller extends gradingform_controller {
         if (empty($options['alwaysshowdefinition']) && !has_capability('moodle/grade:managegradingforms', $page->context))  {
             return '';
         }
+        $mode = gradingform_multigraders_controller::DISPLAY_VIEW;
+        if (has_capability('moodle/grade:manage', $page->context)) {
+            $mode = gradingform_multigraders_controller::DISPLAY_EVAL_FULL;
+        }elseif (has_capability('moodle/grade:edit', $page->context)) {
+            $mode = gradingform_multigraders_controller::DISPLAY_EVAL;
+        }elseif (has_capability('moodle/grade:viewall', $page->context)) {
+            $mode = gradingform_multigraders_controller::DISPLAY_VIEW;
+        }elseif (has_capability('moodle/grade:view', $page->context)) {
+            $mode = gradingform_multigraders_controller::DISPLAY_VIEW;
+        }
+        if($mode == gradingform_multigraders_controller::DISPLAY_VIEW){
+            return  get_string('pluginname','gradingform_multigraders');
+        }
 
-        $output = $this->get_renderer($page);
 
-        $preview = '';
-        $preview .= $output->box($this->get_formatted_description(), 'gradingform_multigraders-description');
-        return $preview;
+        return $this->get_formatted_description($page);
     }
 
     /**
@@ -626,12 +638,20 @@ class gradingform_multigraders_instance extends gradingform_instance {
      */
     public function getGradeRange($forceRefresh = false){
         if($this->gradeRange == null || $forceRefresh) {
-            $graderange = array_keys($this->get_controller()->get_grade_range());
+            $graderange = array_values($this->get_controller()->get_grade_range());
             if (!empty($graderange)) {
-                sort($graderange);
                 $this->gradeRange = new stdClass();
+                sort($graderange);
                 $this->gradeRange->minGrade = $graderange[0];
                 $this->gradeRange->maxGrade = $graderange[count($graderange) - 1];
+                $cutPos = strpos($this->gradeRange->minGrade,'/');
+                if($cutPos !== FALSE){
+                    $this->gradeRange->minGrade = floatval(substr($this->gradeRange->minGrade,0,$cutPos));
+                }
+                $cutPos = strpos($this->gradeRange->maxGrade,'/');
+                if($cutPos !== FALSE){
+                    $this->gradeRange->maxGrade = floatval(substr($this->gradeRange->maxGrade,$cutPos+1));
+                }
                 if($this->gradeRange->minGrade == 1){
                     $this->gradeRange->minGrade = 0;
                 }
@@ -760,10 +780,14 @@ class gradingform_multigraders_instance extends gradingform_instance {
         $currentFormData = $this->get_instance_grades();
         $currentRecordID = null;
 
+        $firstGradeRecord = null;
         $currentRecord = null;
         $finalGradeRecord = null;
 
         foreach ($currentFormData['grades'] as $grader=> $record) {
+            if(!$firstGradeRecord){
+                $firstGradeRecord = $record;
+            }
             if($grader == $USER->id){
                 $currentRecord = $record;
             }
@@ -798,49 +822,54 @@ class gradingform_multigraders_instance extends gradingform_instance {
         }
         //adding a new record
         if(isset($data['grade']) && $data['grade'] !='') {
-            if($currentRecord !== null){
-                $currentRecordID = $DB->get_field('multigraders_grades','id',
-                    array('itemid' => $data['itemid'],'grader' => $USER->id));
-            }
-
-            $newrecord = array('instanceid' => $this->get_id(),
-                'itemid' => $data['itemid'],
-                'grader' => $USER->id,
-                'grade' => $data['grade'],
-                'feedback' => $data['feedback'],
-                'type' => $gradeType,
-                'timestamp' => time(),
-                'visible_to_students' => $data['visible_to_students'],
-                'require_second_grader' => $data['require_second_grader'],
-                'outcomes' => $outcomes);
-            if($currentRecordID){
-                $newrecord['id'] = $currentRecordID;
-                unset($newrecord['timestamp']);
-                $DB->update_record('multigraders_grades', $newrecord);
-            }else {
-                $DB->insert_record('multigraders_grades', $newrecord);
-            }
-            //grade type is not null only when the grading owner(or final grader) is saving the data
-            if($gradingFinal){
-                if($gradeType == gradingform_multigraders_instance::GRADE_TYPE_FINAL) {
-                    $this->data->rawgrade = $data['grade'];
-                }else{
-                    $this->data->rawgrade = -1;
-                }
-                $newdata = new stdClass();
-                $newdata->id = $this->get_id();
-                $newdata->rawgrade = $this->data->rawgrade;
-                $DB->update_record('grading_instances', $newdata);
-            }
-            //if no previous grade or previous grade did not request second grading or it changed type from final
-            //and if the current grade is not final
-            if((!$currentRecord || !$currentRecord->require_second_grader || $currentRecord->type != $gradeType) &&
-                $gradeType != gradingform_multigraders_instance::GRADE_TYPE_FINAL &&
-                $data['require_second_grader']){
-                $this->send_second_graders_notification($gradingFinal);
-            }
         }
+        if($currentRecord !== null){
+            $currentRecordID = $DB->get_field('multigraders_grades','id',
+                array('itemid' => $data['itemid'],'grader' => $USER->id));
+        }
+
         parent::update($data);
+
+        $newrecord = array('instanceid' => $this->get_id(),
+            'itemid' => $data['itemid'],
+            'grader' => $USER->id,
+            'grade' => $data['grade'],
+            'feedback' => $data['feedback'],
+            'type' => $gradeType,
+            'timestamp' => time(),
+            'visible_to_students' => $data['visible_to_students'],
+            'require_second_grader' => $data['require_second_grader'],
+            'outcomes' => $outcomes);
+        if($currentRecordID){
+            $newrecord['id'] = $currentRecordID;
+            unset($newrecord['timestamp']);
+            $DB->update_record('multigraders_grades', $newrecord);
+        }else {
+            $DB->insert_record('multigraders_grades', $newrecord);
+        }
+        //grade type is not null only when the grading owner(or first/final grader) is saving the data
+        if($gradingFinal){
+            if($gradeType == gradingform_multigraders_instance::GRADE_TYPE_FINAL) {
+                $this->data->rawgrade = $data['grade'];
+                $this->data->grade = $data['grade'];
+            }else{
+                $this->data->rawgrade = -1;
+            }
+            $newdata = new stdClass();
+            $newdata->id = $this->get_id();
+            $newdata->rawgrade = $this->data->rawgrade;
+            $DB->update_record('grading_instances', $newdata);
+        }
+        //if no previous grade or previous grade did not request second grading or it changed type from final
+        //and if the current grade is not final
+        if((!$currentRecord || !$currentRecord->require_second_grader || $currentRecord->type != $gradeType) &&
+            $gradeType != gradingform_multigraders_instance::GRADE_TYPE_FINAL &&
+            $data['require_second_grader']){
+            $this->send_second_graders_notification($gradingFinal,$firstGradeRecord,$data['itemid']);
+        }elseif($firstGradeRecord->grader != $USER->id){
+            $this->send_initial_grader_notification($firstGradeRecord,$data['itemid']);
+        }
+
         $this->get_instance_grades(true);
     }
 
@@ -859,7 +888,10 @@ class gradingform_multigraders_instance extends gradingform_instance {
      * @return float|int the valid grade from $this->get_controller()->get_grade_range()
      */
     public function get_grade() {
-        return $this->get_data('rawgrade');
+        if($this->get_controller()->get_allow_grade_decimals()) {
+            return $this->data->rawgrade;
+        }
+        return floor($this->data->rawgrade);
     }
 
     /**
@@ -984,29 +1016,6 @@ class gradingform_multigraders_instance extends gradingform_instance {
             $mode = gradingform_multigraders_controller::DISPLAY_VIEW;
         }
 
-       /* $assignmentInstance = $PAGE->cm->instance;
-        $courseid = $PAGE->cm->get_course()->id;
-        $ctrl = null;
-
-        $gtree = new grade_tree($courseid, false, false);
-        $assignmentOutcomes = Array();
-
-        $assignment_category = null;
-        foreach($gtree->items as $id => $item){
-            if($item->iteminstance == $assignmentInstance){
-                $assignment_category = $item->categoryid;
-                if($item->outcomeid){
-                    $assignmentOutcomes[] = $item;
-                }
-            }
-        }
-        foreach($gtree->items as $id => $item){
-            if($item->calculation != null && $item->iteminstance == $assignment_category){
-                $ctrl = $item->calculation;
-                break;
-            }
-        }
-        $ctrl = $assignmentOutcomes;*/
 
         /*$grade_item = grade_item::fetch(array('id'=>3582, 'courseid'=>$PAGE->cm->get_course()->id));
         if($grade_item) {
@@ -1016,7 +1025,13 @@ class gradingform_multigraders_instance extends gradingform_instance {
 
             $ctrl = $calculation;
         }*/
-       /* $ctrl = $PAGE->cm->get_course();
+        /*$gradinginfo = grade_get_grades($PAGE->cm->get_course()->id,
+            'mod',
+            'assign',
+            $PAGE->cm->instance);
+
+        $ctrl = $gradinginfo;
+
 
         $methods = get_class_methods($ctrl);
         $vars = get_object_vars($ctrl);
@@ -1035,29 +1050,42 @@ class gradingform_multigraders_instance extends gradingform_instance {
      * Sends notifications to all users listed as second graders in the definition.
      * $sentByOwner tells if the action was triggered by the grader assigning the final grade or by an intermediary grader
      * @param bool $sentByOwner
+     * @param stdClass $firstGradeRecord
+     * @param int $itemID
      */
-    public function send_second_graders_notification($sentByOwner = false)
-    {
+    public function send_second_graders_notification($sentByOwner = false, $firstGradeRecord = null,$itemID = null){
         global $USER, $PAGE, $DB;
 
+        //obtain the user being graded
+        $records = $DB->get_records('assign_grades', array('id' => $itemID), 'userid');
+        foreach ($records as $record) {
+            $userID = (int)$record->userid;
+            break;
+        }
+        //$userID is now the ID of the user graded
+        $gradeeURL = self::get_user_url($userID);
+
         $grader = self::get_user_url($USER->id);
-
-
-        $subject = get_string('message_subject', 'gradingform_multigraders',$PAGE->cm->name);
-        $contextUrl = new moodle_url('/mod/assign/view.php', array('id' => $PAGE->cm->id,'action'=>'grader'));
+        $contextUrl = new moodle_url('/mod/assign/view.php', array('id' => $PAGE->cm->id,'action'=>'grader','userid' => $userID));
         $contexturlname = get_string('message_assign_name', 'gradingform_multigraders','<a href="'.$contextUrl.'">'.$PAGE->cm->name.'</a><br/>');
+        $contexturlname .= ' '.get_string('message_student_name', 'gradingform_multigraders',$gradeeURL.'<br/>');
+        $subject = get_string('message_subject', 'gradingform_multigraders',$contexturlname);//$PAGE->cm->name);
+        $arrSecondGradingList = explode(',', $this->options->secondary_graders_id_list);
 
         $fullmessagehtml = $contexturlname;
         if($sentByOwner) {
             $fullmessagehtml .= get_string('message_smallmessage1', 'gradingform_multigraders', $grader);
             $fullmessagehtml .= get_string('message_smallmessage2', 'gradingform_multigraders').'<br/>';
         }else{
+            //this notification is generated by a secondary grader, it should be sent to owner/first grader as well
+            if($firstGradeRecord && $firstGradeRecord->grader){
+                array_push($arrSecondGradingList,$firstGradeRecord->grader);
+            }
             $fullmessagehtml .= get_string('message_smallmessage1', 'gradingform_multigraders', $grader);
             $fullmessagehtml .= get_string('message_smallmessage2', 'gradingform_multigraders').'<br/>';
         }
         $smallmessage = $subject;
 
-        $arrSecondGradingList = explode(',', $this->options->secondary_graders_id_list);
         if ($arrSecondGradingList) {
             foreach ($arrSecondGradingList as $userID) {
                 if(!$userID || $userID == $USER->id){
@@ -1087,6 +1115,63 @@ class gradingform_multigraders_instance extends gradingform_instance {
                 $messageid = message_send($message);
             }
         }
+    }
+
+    /**
+     * Sends notifications to first graders of this assignment
+     * @param stdClass $firstGradeRecord
+     * @param int $itemID
+     */
+    public function send_initial_grader_notification($firstGradeRecord = null,$itemID = null){
+        global $USER, $PAGE, $DB;
+
+        if($firstGradeRecord->grader == $USER->id){
+            return;
+        }
+
+        //obtain the user being graded
+        $records = $DB->get_records('assign_grades', array('id' => $itemID), 'userid');
+        foreach ($records as $record) {
+            $userID = (int)$record->userid;
+            break;
+        }
+        //$userID is now the ID of the user graded
+        $gradeeURL = self::get_user_url($userID);
+
+        $grader = self::get_user_url($USER->id);
+        $contextUrl = new moodle_url('/mod/assign/view.php', array('id' => $PAGE->cm->id,'action'=>'grader','userid' => $userID));
+        $contexturlname = get_string('message_assign_name', 'gradingform_multigraders','<a href="'.$contextUrl.'">'.$PAGE->cm->name.'</a><br/>');
+        $contexturlname .= ' '.get_string('message_student_name', 'gradingform_multigraders',$gradeeURL.'<br/>');
+        $subject = get_string('message_subject_to_initial', 'gradingform_multigraders',$contexturlname);
+
+
+        $fullmessagehtml = $contexturlname;
+        $fullmessagehtml .= get_string('message_smallmessage3', 'gradingform_multigraders', $grader);
+        $fullmessagehtml .= get_string('message_smallmessage4', 'gradingform_multigraders').'<br/>';
+
+        $smallmessage = $subject;
+
+        $message = new \core\message\message();
+        $message->component = 'gradingform_multigraders';
+        $message->name = 'secondgrading';
+        $message->notification = 0;
+        $message->userfrom = $USER;
+        $message->userto = $firstGradeRecord->grader;
+        $message->subject = $subject;
+        $message->fullmessage = strip_tags($fullmessagehtml);
+        $message->fullmessageformat = FORMAT_HTML;
+        $message->fullmessagehtml = $fullmessagehtml;
+        $message->smallmessage = $smallmessage;
+
+        $message->contexturl = $contextUrl;
+        $message->contexturlname = $contexturlname;
+        $message->replyto = core_user::get_noreply_user();
+        $content = array('*' => array(
+            'header' => get_string('message_header', 'gradingform_multigraders'),
+            'footer' => get_string('message_footer', 'gradingform_multigraders'))); // Extra content for specific processor
+        $message->set_additional_content('email', $content);
+        $message->courseid = $PAGE->cm->get_course()->id; // This is required in recent versions, use it from 3.2 on https://tracker.moodle.org/browse/MDL-47162
+        message_send($message);
     }
 
 }
