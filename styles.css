@@ -40,6 +40,9 @@
     background-color: #f3f2aa;
     border-color: #ee2;
 }
+ .gradingform_multigraders{
+     width: 100%;
+ }
  .gradingform_multigraders .instance_details{
 
  }
@@ -75,11 +78,11 @@
  .multigraders_grade div.grade{
      height: 3em;
      float: left;
-     width: 3.5em;
+     width: 7em;
  }
  .multigraders_grade div.grade input,
  .multigraders_grade div.grade select{
-     width: 3em;
+     width: 7em;
      text-align: right;
      float: left;
      border-radius: 0;
@@ -87,7 +90,7 @@
      margin: 0;
  }
  .multigraders_grade div.grade select{
-     width: 3.3em;
+     width: 7em;
      text-align: left;
  }
  .multigraders_grade span.grade_range{
@@ -138,7 +141,7 @@
  .multigraders_grade .grader{
      float: left;
      min-width: 80px;
-     padding-right: 5px;
+     padding:0 5px;
  }
  .multigraders_grade .grader_name{
      color:#01325F;

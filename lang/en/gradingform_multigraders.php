@@ -29,6 +29,7 @@ $string['addcomment'] = 'Add frequently used comment';
 $string['backtoediting'] = 'Back to editing';
 $string['clicktoedit'] = 'Click to edit';
 $string['clicktocopy'] = 'Copy notes to feedback comments';
+$string['clicktodeleteadmin'] = 'Delete all grade data for this assignment';
 $string['comment'] = 'Comment';
 $string['editdefinition'] = 'Edit multiple graders options';
 $string['description'] = 'Template Description';

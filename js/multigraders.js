@@ -8,10 +8,10 @@ M.gradingform_multigraders.init = function(Y, options) {
     this.user_is_allowed_edit = false;
     this.number_of_grades = 0;
 
-    if(Y.all('input[name="multigraders_allow_final_edit"').get('value') =='true'){
+    if(jQuery('input[name="multigraders_allow_final_edit"]').val() =='true'){
         this.grading_final = true;
     }
-    if(Y.all('input[name="multigraders_user_is_allowed_edit"').get('value') =='true'){
+    if(jQuery('input[name="multigraders_user_is_allowed_edit"]').val() =='true'){
         this.user_is_allowed_edit = true;
     }
     this.number_of_grades = Y.all('.multigraders_grade').size();
@@ -81,6 +81,13 @@ M.gradingform_multigraders.init = function(Y, options) {
         Y.one('#id_assignfeedbackcomments_editoreditable').setHTML(newFeedback);
         Y.one('#id_assignfeedbackcomments_editoreditable').focus();
     });
+    Y.all('.gradingform_multigraders .delete_button').on('click', function(e) {
+        var yes = confirm('Are you sure?');
+        if(yes){
+            jQuery('input.multigraders_delete_all').val('true');
+            jQuery('div[data-region="grade-actions"] button[name="savechanges"]').trigger( "click" );
+        }
+    });
     //this code makes sure that the value of the input consists only of digits
     Y.all('.multigraders_grade input.grade').on('keypress', function(event) {
         if(event.ctrlKey){
@@ -140,11 +147,11 @@ M.gradingform_multigraders.updateGrade = function(element) {
     //get all outcome values
     Y.one(element).ancestor(".multigraders_grade").all('.outcome select[data-id]').each(function(node,index){
         var outcomeId = node.getAttribute('data-id');
-        var outcomeVal = node.get('value');
-        var rangeMin = parseInt(node.getAttribute('data-range-min'),10);
+        var outcomeVal = parseFloat(jQuery(node.getDOMNode()).children(':selected').text());
+       /* var rangeMin = parseInt(node.getAttribute('data-range-min'),10);
         var rangeMax = parseInt(node.getAttribute('data-range-max'),10);
         //scale the value of the outcome to the range of the grade
-        outcomeVal = (outcomeVal - rangeMin)/(rangeMax-rangeMin)*(gradeRangeMax-gradeRangeMin)+gradeRangeMin;
+        outcomeVal = (outcomeVal - rangeMin)/(rangeMax-rangeMin)*(gradeRangeMax-gradeRangeMin)+gradeRangeMin;*/
         outcomeVal = outcomeVal.toFixed(2);
         formula = formula.replace('##gi'+outcomeId+'##',outcomeVal);
     });
@@ -152,6 +159,7 @@ M.gradingform_multigraders.updateGrade = function(element) {
     formula = formula.replace(/##gi(\d+)##/gi,0);
     Y.one(element).ancestor(".multigraders_grade").one('input.grade,select.grade').set("title", formula);
     formula = formula.replace('=sum','');
+    formula = formula.replace('=','');
     try {
         grade = eval(formula);
     }catch(anything){
@@ -168,6 +176,8 @@ M.gradingform_multigraders.updateGrade = function(element) {
     if(tag == 'SELECT'){
         //check if the computed grade matches one of the values in the select
         var selectedGrade = null;
+        var prevGrade = null;
+        var prevIntGrade = null;
         gradeElement.get("options").each( function() {
             if(selectedGrade){
                 return;
@@ -175,10 +185,17 @@ M.gradingform_multigraders.updateGrade = function(element) {
             var value  = this.get('value');
             var intVal = parseInt(this.get('text'),10);
             if(intVal <= grade){
+                if(Math.abs(prevIntGrade-grade) < (grade - intVal)){
+                    gradeElement.set("value", prevGrade);
+                    selectedGrade = prevIntGrade;
+                    return;
+                }
                 gradeElement.set("value", value);
                 selectedGrade = intVal;
                 return;
             }
+            prevGrade = value;
+            prevIntGrade = intVal;
 
         });
     }else {

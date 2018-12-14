@@ -360,6 +360,21 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
             'value' => ($userIsAllowedToGrade ? 'true' : 'false'));
         $output .= html_writer::empty_tag('input', array_merge($atts));
 
+        //delete button for admins
+        $systemcontext = context_system::instance();
+        if(has_capability('moodle/site:config', $systemcontext)) {
+            $atts = array('href' => 'javascript:void(null)',
+                'title' => get_string('clicktodeleteadmin', 'gradingform_multigraders'),
+                'class' => 'delete_button');
+            $deleteButton = html_writer::tag('a', get_string('clicktodeleteadmin', 'gradingform_multigraders'), $atts);
+            $output .= $deleteButton;
+            $atts = array('type' => 'hidden',
+                'name' => $this->elementName . '[multigraders_delete_all]',
+                'class' => 'multigraders_delete_all',
+                'value' => 'false');
+            $output .= html_writer::empty_tag('input', array_merge($atts));
+        }
+
         return html_writer::tag('div',$output . $finalGradeMessage , array('class' => 'gradingform_multigraders'));
     }
 
@@ -402,6 +417,9 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
             'data-grade-range-min' => $this->gradeRange->minGrade,
             'data-grade-range-max' => $this->gradeRange->maxGrade,
             'class' => 'grade');
+        if($this->outcomes) {
+            $atts['disabled'] = 'disabled';
+        }
         if(!$this->scaleid) {
             $grade = html_writer::empty_tag('input', array_merge($atts, $commonAtts));
         }else{
@@ -538,7 +556,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
             }
             /*$echo = highlight_string("<?php\n\$obj =\n" . var_export($outcome, true) . ";\n?>");*/
 
-            $val = 0;
+            $val = -1;
             if($outcomes && isset($outcomes->$index)){
                 $val = $outcomes->$index;
             }elseif(isset($this->defaultNextOutcomes->$index)){
@@ -556,13 +574,21 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                 $opts = make_grades_menu(-$outcome->scaleid);
                 $attributes['data-index'] = $index;
                 $attributes['data-id'] = $outcome->id;
-                $arrRange = array_keys($opts);
+                /*$arrRange = array_values($opts);
                 sort($arrRange);
                 $attributes['data-range-min'] = $arrRange[0];
                 $attributes['data-range-max'] = $arrRange[count($arrRange) - 1];
-                if($attributes['data-range-min'] = 1){
-                    $attributes['data-range-min'] = 0;
+                $cutPos = strpos($attributes['data-range-min'],'/');
+                if($cutPos !== FALSE){
+                    $attributes['data-range-min'] = floatval(substr($attributes['data-range-min'],0,$cutPos));
                 }
+                $cutPos = strpos($attributes['data-range-max'],'/');
+                if($cutPos !== FALSE){
+                    $attributes['data-range-max'] = floatval(substr($attributes['data-range-max'],$cutPos+1));
+                }
+                if($attributes['data-range-min'] == 1){
+                    $attributes['data-range-min'] = 0;
+                }*/
 
                 $opts[-1] = get_string('nooutcome', 'grades');
                 $outcomeSelect = html_writer::tag('div', html_writer::select($opts, $this->elementName . '[outcome][' . $index . ']', $val, null, $attributes), array('class' => 'fselect fitemtitle'));

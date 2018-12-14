@@ -721,6 +721,10 @@ class gradingform_multigraders_instance extends gradingform_instance {
     public function validate_grading_element($elementvalue) {
         global $USER;
 
+        if(isset($elementvalue['multigraders_delete_all']) && $elementvalue['multigraders_delete_all']=='true') {
+            return true;
+        }
+
         if (!isset($elementvalue['grade']) || trim($elementvalue['grade']) == ''){
             return true;
         }
@@ -783,6 +787,25 @@ class gradingform_multigraders_instance extends gradingform_instance {
         $firstGradeRecord = null;
         $currentRecord = null;
         $finalGradeRecord = null;
+
+        //check first if an admin wants to delete everything for this grade
+        //check if multigraders_delete_all parameter was sent
+        if(isset($data['multigraders_delete_all']) && $data['multigraders_delete_all']=='true') {
+            //check if user is admin
+            $systemcontext = context_system::instance();
+            if(has_capability('moodle/site:config', $systemcontext)) {
+                parent::update($data);
+                $DB->delete_records('multigraders_grades',array('itemid' => $this->getItemID()));
+                $this->data->rawgrade = -1;
+                $newdata = new stdClass();
+                $newdata->id = $this->get_id();
+                $newdata->rawgrade = -1;
+                $DB->update_record('grading_instances', $newdata);
+
+            }
+            $this->get_instance_grades(true);
+            return;
+        }
 
         foreach ($currentFormData['grades'] as $grader=> $record) {
             if(!$firstGradeRecord){
@@ -961,13 +984,25 @@ class gradingform_multigraders_instance extends gradingform_instance {
             $html .= html_writer::tag('div', get_string('blind_marking_explained', 'gradingform_multigraders'),
                 array('class' => 'gradingform_multigraders-notice', 'role' => 'alert'));
         }
-
+        $values = $this->get_instance_grades();
         $value = $gradingformelement->getValue();
-        if ($value === null) {
-            $value = $this->get_instance_grades();
-        } else if ($err = $this->validate_grading_element($value)) {
-            $html .= html_writer::tag('div', $err, array('class' => 'gradingform_multigraders-error'));
+        if ($value !== null){
+            //go through previous grades and update only the new one
+            foreach ($values['grades'] as $grader => $record) {
+                if($grader == $USER->id){
+                    $values['grades'][$grader]->grade = $value['grade'];
+                    $values['grades'][$grader]->type = $value['type'];
+                    $values['grades'][$grader]->feedback = $value['feedback'];
+                    $values['grades'][$grader]->require_second_grader = $value['require_second_grader'];
+                    $values['grades'][$grader]->grade = $value['grade'];
+                    $values['grades'][$grader]->outcomes =  (object)$value['outcome'];
+                }
+            }
+            if($err = $this->validate_grading_element($value)) {
+                $html .= html_writer::tag('div', $err, array('class' => 'gradingform_multigraders-error'));
+            }
         }
+
         $currentinstance = $this->get_current_instance();
         if ($currentinstance && $currentinstance->get_status() == gradingform_instance::INSTANCE_STATUS_NEEDUPDATE) {
             $this->options->status = gradingform_instance::INSTANCE_STATUS_NEEDUPDATE;
@@ -982,29 +1017,6 @@ class gradingform_multigraders_instance extends gradingform_instance {
         }
 
 
-        /*$haschanges = false;
-        if ($currentinstance) {
-            $curfilling = $currentinstance->get_instance_grades();
-
-            foreach ($curfilling['grades'] as $grader => $currGrade) {
-                $checkChanges = false;
-                if(isset($value['grades'][$grader])) {
-                    $checkChanges = true;
-                }
-                foreach (Array('grade','grader', 'feedback', 'type') as $key) {
-                    if ($checkChanges && $value['grades'][$grader][$key] != $currGrade[$key]) {
-                        $haschanges = true;
-                    }
-                    if(!$checkChanges){
-                        $value['grades'][$grader][$key] = $currGrade[$key];
-                    }
-                }
-            }
-        }
-        if ($this->get_data('isrestored') && $haschanges) {
-            $html .= html_writer::tag('div', get_string('restoredfromdraft', 'gradingform_multigraders'),
-                array('class' => 'gradingform_multigraders-restored'));
-        }*/
         $mode = gradingform_multigraders_controller::DISPLAY_VIEW;
         if (has_capability('moodle/grade:manage', $page->context)) {
             $mode = gradingform_multigraders_controller::DISPLAY_EVAL_FULL;
@@ -1016,21 +1028,12 @@ class gradingform_multigraders_instance extends gradingform_instance {
             $mode = gradingform_multigraders_controller::DISPLAY_VIEW;
         }
 
-
-        /*$grade_item = grade_item::fetch(array('id'=>3582, 'courseid'=>$PAGE->cm->get_course()->id));
-        if($grade_item) {
-
-            $calculation = calc_formula::localize($grade_item->calculation);
-            $calculation = grade_item::denormalize_formula($calculation, $grade_item->courseid);
-
-            $ctrl = $calculation;
-        }*/
         /*$gradinginfo = grade_get_grades($PAGE->cm->get_course()->id,
             'mod',
             'assign',
             $PAGE->cm->instance);
 
-        $ctrl = $gradinginfo;
+        $ctrl = $value;
 
 
         $methods = get_class_methods($ctrl);
@@ -1039,10 +1042,14 @@ class gradingform_multigraders_instance extends gradingform_instance {
         asort($vars);
         $echo = highlight_string("<?php\n\$obj =\n" . var_export($ctrl, true) . ";\n?>");
         $echo .= highlight_string("<?php\n\$methods =\n" . var_export($methods, true) . ";\n?>");
-        $echo .= highlight_string("<?php\n\$vars =\n" . var_export(array_keys($vars), true) . ";\n?>");
+        $echo .= highlight_string("<?php\n\$vars =\n" . var_export(array_keys($vars), true) . ";\n?>");*/
+        /*ob_start();
+        var_dump($value);
+        $echo = ob_get_contents();
+        ob_end_clean();
         $html .= html_writer::tag('div', $echo, array('class' => 'dump'));*/
 
-        $html .= $this->get_controller()->get_renderer($page)->display_form( $mode,$this->options, $value,  $gradingformelement->getName(),$this->validationErrors,$this->getGradeRange() );
+        $html .= $this->get_controller()->get_renderer($page)->display_form( $mode,$this->options, $values,  $gradingformelement->getName(),$this->validationErrors,$this->getGradeRange() );
         return $html;
     }
 
