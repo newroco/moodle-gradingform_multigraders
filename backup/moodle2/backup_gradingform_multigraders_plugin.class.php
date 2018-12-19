@@ -45,6 +45,7 @@ class backup_gradingform_multigraders_plugin extends backup_gradingform_plugin {
         // Create a visible container for our data.
         $pluginwrapper = new backup_nested_element($this->get_recommended_name(),Array('id'),Array(
             'secondary_graders_id_list',
+            'criteria',
             'blind_marking',
             'show_intermediary_to_students',
             'auto_calculate_final_method'));

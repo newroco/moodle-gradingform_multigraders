@@ -129,13 +129,6 @@ M.gradingform_multigraders.init = function(Y, options) {
         }
     });
 };
-M.gradingform_multigraders.nl2br = function(str) {
-    if (typeof str === 'undefined' || str === null) {
-        return '';
-    }
-    var breakTag = '<br />';
-    return (str + '').replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1' + breakTag + '$2');
-}
 M.gradingform_multigraders.updateGrade = function(element) {
     var formula = Y.one(element).ancestor(".multigraders_grade").one('input.grade,select.grade').getAttribute('data-formula');
     var gradeRangeMin = parseInt(Y.one(element).ancestor(".multigraders_grade").one('input.grade,select.grade').getAttribute('data-grade-range-min'),10);
@@ -162,7 +155,7 @@ M.gradingform_multigraders.updateGrade = function(element) {
     formula = formula.replace('=','');
     try {
         grade = eval(formula);
-    }catch(anything){
+    } catch (anything) {
         //nothing
     }
     //update grade value
@@ -171,9 +164,11 @@ M.gradingform_multigraders.updateGrade = function(element) {
     }else{
         grade = grade.toFixed(1);
     }
-    var gradeElement = Y.one(element).ancestor(".multigraders_grade").one('input.grade,select.grade');
+    var ancestor = Y.one(element).ancestor(".multigraders_grade");
+    var gradeElement = ancestor.one('input.grade,select.grade');
     var tag = gradeElement.get('tagName');
     if(tag == 'SELECT'){
+        var gradeElements = jQuery(ancestor.getDOMNode()).find('select.grade,input.grade_hidden');
         //check if the computed grade matches one of the values in the select
         var selectedGrade = null;
         var prevGrade = null;
@@ -186,11 +181,11 @@ M.gradingform_multigraders.updateGrade = function(element) {
             var intVal = parseInt(this.get('text'),10);
             if(intVal <= grade){
                 if(Math.abs(prevIntGrade-grade) < (grade - intVal)){
-                    gradeElement.set("value", prevGrade);
+                    gradeElements.val(prevGrade);
                     selectedGrade = prevIntGrade;
                     return;
                 }
-                gradeElement.set("value", value);
+                gradeElements.val(value);
                 selectedGrade = intVal;
                 return;
             }
@@ -199,6 +194,16 @@ M.gradingform_multigraders.updateGrade = function(element) {
 
         });
     }else {
-        gradeElement.set("value", grade);
+        gradeElement.set("value",grade);
     }
+}
+M.gradingform_multigraders.nl2br = function(str) {
+    if (typeof str === 'undefined' || str === null) {
+        return '';
+    }
+    var breakTag = '<br />';
+    return (str + '').replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1' + breakTag + '$2');
+}
+M.gradingform_multigraders.isNumeric = function(n) {
+    return !isNaN(parseFloat(n)) && isFinite(n);
 }

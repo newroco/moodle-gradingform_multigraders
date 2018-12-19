@@ -11,6 +11,7 @@
         <FIELD NAME="show_intermediary_to_students" TYPE="int" LENGTH="1" NOTNULL="false" DEFAULT="1" SEQUENCE="false" COMMENT="If set to 1, shows intermediary grades and comments to student"/>
         <FIELD NAME="auto_calculate_final_method" TYPE="int" LENGTH="1" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="This defines what method is used to calculate the final grade from the previous: 0 - last previous grade, 1 - minimum previous grade, 2- maximum previous grade, 3- average"/>
         <FIELD NAME="secondary_graders_id_list" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="The persons that will get notified if a second grader is required."/>
+          <FIELD NAME="criteria" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="The grading criteria"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

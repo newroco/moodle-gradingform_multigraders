@@ -52,6 +52,10 @@
  .gradingform_multigraders .instance_details.highlight_green{
      color: green;
  }
+ .multigraders_criteria{
+     background: #ffa;
+     margin-bottom: 5px !important;
+ }
 
  .multigraders_grade {
      background: #fff;

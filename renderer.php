@@ -64,6 +64,10 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         $this->options = $options;
         $this->scaleid = null;
 
+        if($options->criteria) {
+            $output .= html_writer::tag('div',get_string('criteria', 'gradingform_multigraders').': <br/>'.nl2br($options->criteria), array('class' => 'coursebox multigraders_criteria'));
+        }
+
 
         $gradinginfo = grade_get_grades($PAGE->cm->get_course()->id,
             'mod',
@@ -409,6 +413,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         }
 
         //grade
+        $grade = '';
         $atts = array('type' => 'text',
             'name' => $this->elementName.'[grade]',
             'value' => $record->grade,
@@ -417,16 +422,27 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
             'data-grade-range-min' => $this->gradeRange->minGrade,
             'data-grade-range-max' => $this->gradeRange->maxGrade,
             'class' => 'grade');
-        if($this->outcomes) {
-            $atts['disabled'] = 'disabled';
-        }
-        if(!$this->scaleid) {
-            $grade = html_writer::empty_tag('input', array_merge($atts, $commonAtts));
-        }else{
+        //in case we need a select box
+        if($this->scaleid) {
+            if($this->outcomes) {
+                $atts2 = array('type' => 'hidden',
+                    'name' => $this->elementName.'[grade_hidden]',
+                    'value' => $record->grade,
+                    'class' => 'grade_hidden');
+                $grade .= html_writer::empty_tag('input', array_merge($atts2, $commonAtts));
+                $atts['disabled'] = 'disabled';
+            }
             unset($atts['value']);
+            unset($atts['type']);
             unset($atts['name']);
             $opts = make_grades_menu(-$this->scaleid);
-            $grade = html_writer::select($opts,$this->elementName.'[grade]',$record->grade,$nothing=array('-1'=>get_string('no_grade', 'gradingform_multigraders')),array_merge($atts, $commonAtts));
+            $grade .= html_writer::select($opts,$this->elementName.'[grade]',$record->grade,$nothing=array('-1'=>get_string('no_grade', 'gradingform_multigraders')),array_merge($atts, $commonAtts));
+        }
+        if(!$this->scaleid) {
+            if($this->outcomes) {
+                $atts['readonly'] = 'readonly';
+            }
+            $grade = html_writer::empty_tag('input', array_merge($atts, $commonAtts));
         }
         $gradeRange = '';
         if($this->gradeRange) {
@@ -632,7 +648,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         $definition = $instance->get_controller()->get_definition();
         $options = new stdClass();
         if($definition) {
-            foreach (array('secondary_graders_id_list','blind_marking','show_intermediary_to_students','auto_calculate_final_method') as $key) {
+            foreach (array('secondary_graders_id_list','criteria','blind_marking','show_intermediary_to_students','auto_calculate_final_method') as $key) {
                 if (isset($definition->$key)) {
                     $options->$key = $definition->$key;
                 }

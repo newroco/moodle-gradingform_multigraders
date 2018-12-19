@@ -39,6 +39,7 @@ $string['err_noformula'] = 'There is no formula defined for calculating the grad
 $string['needregrademessage'] = 'The multigraders definition was changed after this student had been graded. The student can not see the outcome until {$a} checks the published grade.';
 $string['gradingof'] = '{$a} grading';
 $string['definition'] = 'Definition';
+$string['criteria'] = 'Grading criteria';
 $string['maxscore'] = 'Maximum score';
 $string['secondary_graders_list'] = 'Secondary graders defined: {$a}.';
 $string['secondary_graders'] = 'Secondary graders';

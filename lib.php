@@ -147,7 +147,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
         $setd = implode(',',$set); // implode ids with comma
         $newdefinition->secondary_graders_id_list = $setd;// stored in database table.
 
-        foreach (array('status', 'name', 'description','secondary_graders_id_list','blind_marking','show_intermediary_to_students','auto_calculate_final_method') as $key) {
+        foreach (array('status', 'name', 'description','secondary_graders_id_list','criteria','blind_marking','show_intermediary_to_students','auto_calculate_final_method') as $key) {
             if (isset($newdefinition->$key) && $newdefinition->$key != $this->definition->$key) {
                 $haschanges[1] = true;
             }
@@ -171,11 +171,13 @@ class gradingform_multigraders_controller extends gradingform_controller {
                 $data->show_intermediary_to_students = 1;
                 $data->auto_calculate_final_method = 0;
                 $data->secondary_graders_id_list = Array();
+                $data->criteria = '';
             }else {
                 $data->blind_marking = $newdefinition->blind_marking;
                 $data->show_intermediary_to_students = $newdefinition->show_intermediary_to_students;
                 $data->auto_calculate_final_method = $newdefinition->auto_calculate_final_method;
                 $data->secondary_graders_id_list = $newdefinition->secondary_graders_id_list;
+                $data->criteria = $newdefinition->criteria;
             }
             if(isset($this->definition->empty)){
                 $DB->insert_record_raw('multigraders_definitions', $data,false,false,true);
@@ -241,11 +243,13 @@ class gradingform_multigraders_controller extends gradingform_controller {
             $this->definition->auto_calculate_final_method = 0;
             $this->secondary_graders_id_list = Array();
             $this->definition->empty = true;
+            $this->definition->criteria = '';
         }else{
             $this->definition->blind_marking = $definitionExtras->blind_marking;
             $this->definition->show_intermediary_to_students = $definitionExtras->show_intermediary_to_students;
             $this->definition->auto_calculate_final_method = $definitionExtras->auto_calculate_final_method;
             $this->definition->secondary_graders_id_list = $definitionExtras->secondary_graders_id_list;
+            $this->definition->criteria = $definitionExtras->criteria;
             unset($this->definition->empty);
         }
 
@@ -309,7 +313,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
             $properties->modulegrade = $this->moduleinstance->grade;
         }
         if ($definition) {
-            foreach (array('id', 'name', 'description','secondary_graders_id_list','blind_marking','show_intermediary_to_students','auto_calculate_final_method') as $key) {
+            foreach (array('id', 'name', 'description','secondary_graders_id_list','criteria', 'blind_marking','show_intermediary_to_students','auto_calculate_final_method') as $key) {
                 $properties->$key = $definition->$key;
             }
             /*$options = self::description_form_field_options($this->get_context());
@@ -368,6 +372,10 @@ class gradingform_multigraders_controller extends gradingform_controller {
         );
         $text = get_string('pluginname','gradingform_multigraders');
         $text .= "\n".$this->definition->description;
+        if($this->definition->criteria) {
+            $text .= "\n" . get_string('criteria', 'gradingform_multigraders') . ": ";
+            $text .= $this->definition->criteria;
+        }
         if(isset($this->definition->secondary_graders_id_list) &&
             $this->definition->secondary_graders_id_list != ''){
             //transform list of grader ids into name list
@@ -381,6 +389,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
             $secondaryGraders = substr($secondaryGraders,0,-2);
             $text .= "\n".get_string('secondary_graders_list','gradingform_multigraders',$secondaryGraders);
         }
+
         if(isset($this->definition->blind_marking) && $this->definition->blind_marking == 1){
             $text .= "\n".get_string('blind_marking_explained','gradingform_multigraders');
         }
@@ -450,7 +459,11 @@ class gradingform_multigraders_controller extends gradingform_controller {
             $mode = gradingform_multigraders_controller::DISPLAY_VIEW;
         }
         if($mode == gradingform_multigraders_controller::DISPLAY_VIEW){
-            return  get_string('pluginname','gradingform_multigraders');
+            $html = get_string('pluginname','gradingform_multigraders');
+            if($this->definition->criteria){
+                $html .= ':<br/>'.nl2br($this->definition->criteria);
+            }
+            return $html;
         }
 
 
@@ -562,6 +575,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
         $definition_extradetails = new external_single_structure(
                                   array(
                                       'secondary_graders_id_list'   => new external_value(PARAM_CHAR, '', VALUE_REQUIRED),
+                                      'criteria'   => new external_value(PARAM_CHAR, '', VALUE_REQUIRED),
                                       'blind_marking'   => new external_value(PARAM_INT, 'if blind grading is enabled', VALUE_REQUIRED),
                                       'show_intermediary_to_students'   => new external_value(PARAM_INT, 'if intermediary grades are shown to students', VALUE_REQUIRED),
                                       'auto_calculate_final_method'   => new external_value(PARAM_INT, 'method of calculating the final grade', VALUE_REQUIRED),
@@ -623,7 +637,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
         $definition = $this->get_controller()->get_definition();
         $this->options = new stdClass();
         if($definition) {
-            foreach (array('secondary_graders_id_list','blind_marking','show_intermediary_to_students','auto_calculate_final_method') as $key) {
+            foreach (array('secondary_graders_id_list','criteria', 'blind_marking','show_intermediary_to_students','auto_calculate_final_method') as $key) {
                 if (isset($definition->$key)) {
                     $this->options->$key = $definition->$key;
                 }
@@ -830,6 +844,9 @@ class gradingform_multigraders_instance extends gradingform_instance {
         $outcomes = null;
         if(isset($data['outcome'])) {
             $outcomes =  json_encode($data['outcome']);
+        }
+        if(isset($data['grade_hidden'])) {
+            $data['grade'] = $data['grade_hidden'];
         }
         //updating instanceid for all records of the same item
         $conditions = array('itemid' => $data['itemid']);

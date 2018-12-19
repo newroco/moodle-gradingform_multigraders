@@ -109,6 +109,17 @@ function xmldb_gradingform_multigraders_upgrade($oldversion) {
 
         upgrade_plugin_savepoint(true, 2018071801, 'gradingform', 'multigraders');
     }
+    if ($oldversion < 2018121900) {
+        $dbman = $DB->get_manager();
+        $table = new xmldb_table('multigraders_definitions');
+
+        $field = new xmldb_field('criteria', XMLDB_TYPE_TEXT, null, null, null, null, null, 'secondary_graders_id_list');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_plugin_savepoint(true, 2018121900, 'gradingform', 'multigraders');
+    }
 
     return true;
 }
