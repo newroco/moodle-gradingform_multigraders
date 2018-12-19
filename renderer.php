@@ -65,7 +65,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         $this->scaleid = null;
 
         if($options->criteria) {
-            $output .= html_writer::tag('div',get_string('criteria', 'gradingform_multigraders').': <br/>'.nl2br($options->criteria), array('class' => 'coursebox multigraders_criteria'));
+            $output .= html_writer::tag('div',get_string('criteria', 'gradingform_multigraders').': <br/>'.$options->criteria, array('class' => 'coursebox multigraders_criteria'));
         }
 
 

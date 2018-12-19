@@ -80,8 +80,8 @@ class gradingform_multigraders_editform extends moodleform {
         $form->addHelpButton('secondary_graders_id_list', 'secondary_graders', 'gradingform_multigraders');
 
         //Grading criteria
-        $form->addElement('textarea', 'criteria', get_string('criteria', 'gradingform_multigraders'), 'wrap="virtual" rows="3" cols="50"');
-        $form->setType('criteria', PARAM_TEXT );
+        $form->addElement('editor', 'criteria', get_string('criteria', 'gradingform_multigraders'));
+        $form->setType('criteria', PARAM_RAW );
 
         // Show intermediary grades to students
         $arrOptions = Array();

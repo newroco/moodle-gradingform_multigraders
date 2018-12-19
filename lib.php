@@ -177,7 +177,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
                 $data->show_intermediary_to_students = $newdefinition->show_intermediary_to_students;
                 $data->auto_calculate_final_method = $newdefinition->auto_calculate_final_method;
                 $data->secondary_graders_id_list = $newdefinition->secondary_graders_id_list;
-                $data->criteria = $newdefinition->criteria;
+                $data->criteria = $newdefinition->criteria['text'];
             }
             if(isset($this->definition->empty)){
                 $DB->insert_record_raw('multigraders_definitions', $data,false,false,true);
@@ -315,6 +315,11 @@ class gradingform_multigraders_controller extends gradingform_controller {
         if ($definition) {
             foreach (array('id', 'name', 'description','secondary_graders_id_list','criteria', 'blind_marking','show_intermediary_to_students','auto_calculate_final_method') as $key) {
                 $properties->$key = $definition->$key;
+                if($key == 'criteria'){
+                    $properties->$key = Array();
+                    $properties->$key['text'] = $definition->criteria;
+                    $properties->$key['format'] = 1;
+                }
             }
             /*$options = self::description_form_field_options($this->get_context());
             $properties = file_prepare_standard_editor($properties, 'description', $options, $this->get_context(),
@@ -461,7 +466,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
         if($mode == gradingform_multigraders_controller::DISPLAY_VIEW){
             $html = get_string('pluginname','gradingform_multigraders');
             if($this->definition->criteria){
-                $html .= ':<br/>'.nl2br($this->definition->criteria);
+                $html .= ':<br/>'.$this->definition->criteria;
             }
             return $html;
         }
@@ -575,7 +580,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
         $definition_extradetails = new external_single_structure(
                                   array(
                                       'secondary_graders_id_list'   => new external_value(PARAM_CHAR, '', VALUE_REQUIRED),
-                                      'criteria'   => new external_value(PARAM_CHAR, '', VALUE_REQUIRED),
+                                      'criteria'   => new external_value(PARAM_RAW, '', VALUE_REQUIRED),
                                       'blind_marking'   => new external_value(PARAM_INT, 'if blind grading is enabled', VALUE_REQUIRED),
                                       'show_intermediary_to_students'   => new external_value(PARAM_INT, 'if intermediary grades are shown to students', VALUE_REQUIRED),
                                       'auto_calculate_final_method'   => new external_value(PARAM_INT, 'method of calculating the final grade', VALUE_REQUIRED),
