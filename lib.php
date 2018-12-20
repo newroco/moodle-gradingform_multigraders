@@ -466,7 +466,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
         if($mode == gradingform_multigraders_controller::DISPLAY_VIEW){
             $html = get_string('pluginname','gradingform_multigraders');
             if($this->definition->criteria){
-                $html .= ':<br/>'.$this->definition->criteria;
+                $html = $this->definition->criteria;
             }
             return $html;
         }
