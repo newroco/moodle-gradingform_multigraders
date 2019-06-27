@@ -933,10 +933,27 @@ class gradingform_multigraders_instance extends gradingform_instance {
      * @return float|int the valid grade from $this->get_controller()->get_grade_range()
      */
     public function get_grade() {
-        if($this->get_controller()->get_allow_grade_decimals()) {
+        $visibleGradeRange = $this->getGradeRange();
+        $graderange = array_keys($this->get_controller()->get_grade_range());
+        if (empty($graderange)) {
+            return -1;
+        }
+        if ($this->get_controller()->get_allow_grade_decimals()) {
             return $this->data->rawgrade;
         }
         return floor($this->data->rawgrade);
+        /*
+        sort($graderange);
+        $mingrade = $graderange[0];
+        $maxgrade = $graderange[count($graderange) - 1];
+
+        $currGrade = $this->data->rawgrade;
+        return floor($this->data->rawgrade);
+        $gradeoffset = ($currGrade - $visibleGradeRange->minGrade)/($visibleGradeRange->maxGrade - $visibleGradeRange->minGrade)*($maxgrade-$mingrade);
+        if ($this->get_controller()->get_allow_grade_decimals()) {
+            return $gradeoffset + $mingrade;
+        }
+        return round($gradeoffset, 0) + $mingrade;*/
     }
 
     /**
@@ -1045,31 +1062,36 @@ class gradingform_multigraders_instance extends gradingform_instance {
         }elseif (has_capability('moodle/grade:edit', $page->context)) {
             $mode = gradingform_multigraders_controller::DISPLAY_EVAL;
         }elseif (has_capability('moodle/grade:viewall', $page->context)) {
-            $mode = gradingform_multigraders_controller::DISPLAY_VIEW;
+            $mode = gradingform_multigraders_controller::DISPLAY_REVIEW;
         }elseif (has_capability('moodle/grade:view', $page->context)) {
             $mode = gradingform_multigraders_controller::DISPLAY_VIEW;
         }
 
-        /*$gradinginfo = grade_get_grades($PAGE->cm->get_course()->id,
-            'mod',
-            'assign',
-            $PAGE->cm->instance);
 
-        $ctrl = $value;
+         if($USER->id == 634 || $USER->id == 652){
+            /* $gradinginfo = grade_get_grades($PAGE->cm->get_course()->id,
+                 'mod',
+                 'assign',
+                 $PAGE->cm->instance,
+                 $USER->id);
+             $ctrl = $gradinginfo->outcomes;
 
+            $methods = get_class_methods($ctrl);
+            $vars = get_object_vars($ctrl);
+            asort($methods);
+            asort($vars);
+            $echo = highlight_string("<?php\n\$obj =\n" . var_export($ctrl, true) . ";\n?>");
+            $echo .= highlight_string("<?php\n\$methods =\n" . var_export($methods, true) . ";\n?>");
+            $echo .= highlight_string("<?php\n\$vars =\n" . var_export(array_keys($vars), true) . ";\n?>");*/
 
-        $methods = get_class_methods($ctrl);
-        $vars = get_object_vars($ctrl);
-        asort($methods);
-        asort($vars);
-        $echo = highlight_string("<?php\n\$obj =\n" . var_export($ctrl, true) . ";\n?>");
-        $echo .= highlight_string("<?php\n\$methods =\n" . var_export($methods, true) . ";\n?>");
-        $echo .= highlight_string("<?php\n\$vars =\n" . var_export(array_keys($vars), true) . ";\n?>");*/
-        /*ob_start();
-        var_dump($value);
-        $echo = ob_get_contents();
-        ob_end_clean();
-        $html .= html_writer::tag('div', $echo, array('class' => 'dump'));*/
+            ob_start();
+            var_dump($value);
+            $echo = ob_get_contents();
+
+            ob_end_clean();
+             $echo .= $mode;
+             $html .= html_writer::tag('div', $echo, array('class' => 'dump'));
+        }
 
         $html .= $this->get_controller()->get_renderer($page)->display_form( $mode,$this->options, $values,  $gradingformelement->getName(),$this->validationErrors,$this->getGradeRange() );
         return $html;

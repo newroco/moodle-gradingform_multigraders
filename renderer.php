@@ -397,10 +397,9 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         }
 
         //show second feedback to students
-        if(($mode == gradingform_multigraders_controller::DISPLAY_REVIEW ||
-            $mode == gradingform_multigraders_controller::DISPLAY_VIEW) &&
+        if( $mode == gradingform_multigraders_controller::DISPLAY_VIEW &&
             $record !== null) {
-            if($this->options->show_intermediary_to_students && isset($record->visible_to_students) && $record->visible_to_students) {
+            if($this->options->show_intermediary_to_students) {
                 $time = date(get_string('timestamp_format', 'gradingform_multigraders'), $record->timestamp);
                 $timeDiv = html_writer::tag('div', $time, array('class' => 'timestamp'));
                 $userDetails = html_writer::tag('div', '&nbsp;'.gradingform_multigraders_instance::get_user_url($record->grader), array('class' => 'grader'));
