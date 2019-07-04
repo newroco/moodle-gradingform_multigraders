@@ -933,16 +933,19 @@ class gradingform_multigraders_instance extends gradingform_instance {
      * @return float|int the valid grade from $this->get_controller()->get_grade_range()
      */
     public function get_grade() {
-        $visibleGradeRange = $this->getGradeRange();
+
         $graderange = array_keys($this->get_controller()->get_grade_range());
         if (empty($graderange)) {
             return -1;
         }
+        /*
         if ($this->get_controller()->get_allow_grade_decimals()) {
             return $this->data->rawgrade;
         }
         return floor($this->data->rawgrade);
-        /*
+        */
+
+        $visibleGradeRange = $this->getGradeRange();
         sort($graderange);
         $mingrade = $graderange[0];
         $maxgrade = $graderange[count($graderange) - 1];
@@ -953,7 +956,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
         if ($this->get_controller()->get_allow_grade_decimals()) {
             return $gradeoffset + $mingrade;
         }
-        return round($gradeoffset, 0) + $mingrade;*/
+        return round($gradeoffset, 0) + $mingrade;
     }
 
     /**
@@ -1085,7 +1088,8 @@ class gradingform_multigraders_instance extends gradingform_instance {
             $echo .= highlight_string("<?php\n\$vars =\n" . var_export(array_keys($vars), true) . ";\n?>");*/
 
             ob_start();
-            var_dump($value);
+            $opts = make_grades_menu(-5);
+            var_dump($opts);
             $echo = ob_get_contents();
 
             ob_end_clean();
