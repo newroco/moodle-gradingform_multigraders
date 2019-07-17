@@ -633,6 +633,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
     protected $gradeRange;
     protected $instanceGrades;
     protected $updateGrade;
+    protected $log;
 
     const GRADE_TYPE_INTERMEDIARY = 0;
     const GRADE_TYPE_FINAL = 1;
@@ -648,6 +649,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
                 }
             }
         }
+        $this->log = '';
     }
 
     /**
@@ -740,7 +742,9 @@ class gradingform_multigraders_instance extends gradingform_instance {
     public function validate_grading_element($elementvalue) {
         global $USER;
 
+        $this->log .= 'validate_grading_element multigraders_delete_all:'.$elementvalue['multigraders_delete_all'].'. ';
         if(isset($elementvalue['multigraders_delete_all']) && $elementvalue['multigraders_delete_all']=='true') {
+            $this->log .= 'validate_grading_element ret true. ';
             return true;
         }
 
@@ -809,10 +813,13 @@ class gradingform_multigraders_instance extends gradingform_instance {
 
         //check first if an admin wants to delete everything for this grade
         //check if multigraders_delete_all parameter was sent
+        $this->log .= 'update() multigraders_delete_all: '.$data['multigraders_delete_all'].'. ';
         if(isset($data['multigraders_delete_all']) && $data['multigraders_delete_all']=='true') {
+            $this->log .= 'update() multigraders_delete_all is true. ';
             //check if user is admin
             $systemcontext = context_system::instance();
             if(has_capability('moodle/site:config', $systemcontext)) {
+                $this->log .= 'update() moodle/site:config is true. ';
                 parent::update($data);
                 $DB->delete_records('multigraders_grades',array('itemid' => $this->getItemID()));
                 $this->data->rawgrade = -1;
@@ -820,11 +827,13 @@ class gradingform_multigraders_instance extends gradingform_instance {
                 $newdata->id = $this->get_id();
                 $newdata->rawgrade = -1;
                 $DB->update_record('grading_instances', $newdata);
-
             }
+            $this->log .= 'update() after delete. ';
+
             $this->get_instance_grades(true);
             return;
         }
+        $this->log .= 'update() after multigraders_delete_all. ';
 
         foreach ($currentFormData['grades'] as $grader=> $record) {
             if(!$firstGradeRecord){
@@ -1018,8 +1027,25 @@ class gradingform_multigraders_instance extends gradingform_instance {
      */
     public function render_grading_element($page, $gradingformelement) {
         global $USER,$PAGE,$CFG;
+
         $module = array('name'=>'gradingform_multigraders', 'fullpath'=>'/grade/grading/form/multigraders/js/multigraders.js');
         $page->requires->js_init_call('M.gradingform_multigraders.init', null, false, $module);
+
+        $mode = gradingform_multigraders_controller::DISPLAY_VIEW;
+        if (has_capability('moodle/grade:manage', $page->context)) {
+            $mode = gradingform_multigraders_controller::DISPLAY_EVAL_FULL;
+        }elseif (has_capability('moodle/grade:edit', $page->context)) {
+            $mode = gradingform_multigraders_controller::DISPLAY_EVAL;
+        }elseif (has_capability('moodle/grade:viewall', $page->context)) {
+            $mode = gradingform_multigraders_controller::DISPLAY_REVIEW;
+        }elseif (has_capability('moodle/grade:view', $page->context)) {
+            $mode = gradingform_multigraders_controller::DISPLAY_VIEW;
+        }
+        if ($gradingformelement->_flagFrozen && $gradingformelement->_persistantFreeze && has_capability('moodle/grade:edit', $page->context)) {
+            $mode = gradingform_multigraders_controller::DISPLAY_EVAL_FROZEN;
+        }
+
+
         $html = '';
 
         if($this->options->blind_marking){
@@ -1059,16 +1085,9 @@ class gradingform_multigraders_instance extends gradingform_instance {
         }
 
 
-        $mode = gradingform_multigraders_controller::DISPLAY_VIEW;
-        if (has_capability('moodle/grade:manage', $page->context)) {
-            $mode = gradingform_multigraders_controller::DISPLAY_EVAL_FULL;
-        }elseif (has_capability('moodle/grade:edit', $page->context)) {
-            $mode = gradingform_multigraders_controller::DISPLAY_EVAL;
-        }elseif (has_capability('moodle/grade:viewall', $page->context)) {
-            $mode = gradingform_multigraders_controller::DISPLAY_REVIEW;
-        }elseif (has_capability('moodle/grade:view', $page->context)) {
-            $mode = gradingform_multigraders_controller::DISPLAY_VIEW;
-        }
+
+        $this->options->itemID = $this->getItemID();
+        $this->options->userID = self::get_userID_for_itemID($this->options->itemID);
 
 
          if($USER->id == 634 || $USER->id == 652){
@@ -1088,17 +1107,34 @@ class gradingform_multigraders_instance extends gradingform_instance {
             $echo .= highlight_string("<?php\n\$vars =\n" . var_export(array_keys($vars), true) . ";\n?>");*/
 
             ob_start();
-            $opts = make_grades_menu(-5);
-            var_dump($opts);
+            //$opts = make_grades_menu(-5);
+            var_dump($this->log);
+            var_dump($gradingformelement->_flagFrozen);
+             var_dump($gradingformelement->_persistantFreeze);
+//            var_dump($this->options);
+
             $echo = ob_get_contents();
 
             ob_end_clean();
-             $echo .= $mode;
-             $html .= html_writer::tag('div', $echo, array('class' => 'dump'));
+            $html .= html_writer::tag('div', $echo, array('class' => 'dump'));
         }
 
         $html .= $this->get_controller()->get_renderer($page)->display_form( $mode,$this->options, $values,  $gradingformelement->getName(),$this->validationErrors,$this->getGradeRange() );
         return $html;
+    }
+
+    static public function get_userID_for_itemID($itemID){
+        global $DB;
+
+        $userID = null;
+        //obtain the user being graded
+        $records = $DB->get_records('assign_grades', array('id' => $itemID), 'userid');
+        foreach ($records as $record) {
+            $userID = (int)$record->userid;
+            break;
+        }
+        //$userID is now the ID of the user graded
+        return $userID;
     }
 
     /**
@@ -1109,14 +1145,9 @@ class gradingform_multigraders_instance extends gradingform_instance {
      * @param int $itemID
      */
     public function send_second_graders_notification($sentByOwner = false, $firstGradeRecord = null,$itemID = null){
-        global $USER, $PAGE, $DB;
+        global $USER, $PAGE;
 
-        //obtain the user being graded
-        $records = $DB->get_records('assign_grades', array('id' => $itemID), 'userid');
-        foreach ($records as $record) {
-            $userID = (int)$record->userid;
-            break;
-        }
+        $userID = self::get_userID_for_itemID($itemID);
         //$userID is now the ID of the user graded
         $gradeeURL = self::get_user_url($userID);
 
@@ -1178,18 +1209,13 @@ class gradingform_multigraders_instance extends gradingform_instance {
      * @param int $itemID
      */
     public function send_initial_grader_notification($firstGradeRecord = null,$itemID = null){
-        global $USER, $PAGE, $DB;
+        global $USER, $PAGE;
 
         if($firstGradeRecord->grader == $USER->id){
             return;
         }
 
-        //obtain the user being graded
-        $records = $DB->get_records('assign_grades', array('id' => $itemID), 'userid');
-        foreach ($records as $record) {
-            $userID = (int)$record->userid;
-            break;
-        }
+        $userID = self::get_userID_for_itemID($itemID);
         //$userID is now the ID of the user graded
         $gradeeURL = self::get_user_url($userID);
 

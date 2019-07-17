@@ -107,9 +107,9 @@
      min-width: 180px;
  }
  .multigraders_grade .grade_feedback textarea{
-     width: 97%;
-     max-width: 97%;
-     min-width: 97%;
+     width: 100%;
+     max-width: 100%;
+     min-width: 100%;
      margin: 0;
      min-height: 80px;
  }

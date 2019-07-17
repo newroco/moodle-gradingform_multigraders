@@ -75,6 +75,7 @@ $string['save'] = 'Save';
 $string['score'] = 'score';
 $string['no_grade'] = 'No grade';
 $string['finalgradenotdecidedyet'] = 'Final grade not yet published';
+$string['gradingdisabled'] = 'Grading is disabled for this item, it was either locked or overridden.';
 $string['finalgradestarted_noaccess'] = '{$a} started grading this item and you are not in the list of second graders. You are not allowed to make changes.';
 $string['finalgradestarted_nosecond'] = '{$a} started grading this item and no further grading was requested.';
 $string['finalgradefinished_noaccess'] = '{$a} completed grading this item. You are not allowed to make changes.';
