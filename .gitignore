@@ -5,3 +5,7 @@
 
 # User-specific stuff:
 .idea/
+build/
+dist/
+package-lock.json
+node_modules/
