@@ -1,7 +1,7 @@
 {
   "name": "multigraders",
   "version": "1.0.0",
-  "description": "Advanced grading form allowing multiple graders for an assignment",
+  "description": "Advanced grading form allowing multiple graders for assignments",
   "main": "gulpfile.js",
   "scripts": {
     "test": "gulp"

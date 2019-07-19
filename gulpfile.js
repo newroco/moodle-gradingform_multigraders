@@ -57,12 +57,12 @@ gulp.task('header', function() {
 
     return gulp.src(['./build/**/*.php'],
         {base: './build/'})
-        .pipe(header('<?php' + banner + '?>', { pkg : pkg } ))
+        .pipe(header('<?php\n' + banner + '?>\n', { pkg : pkg } ))
         .pipe(gulp.dest('./build/'))
 });
 
 gulp.task('copy-to-build', function() {
-    return gulp.src(['./backup/**/*','./db/**/*','./lang/**/*','./**/*.php','./README','./LICENSE','./instructions.txt','!./build/**/*'],
+    return gulp.src(['./backup/**/*','./db/**/*','./lang/**/*','./**/*.php','./README.md','./LICENSE','!./build/**/*'],
         {base: './'})
         .pipe(gulp.dest('./build/'))
 });
@@ -93,7 +93,7 @@ gulp.task('clean-dist2', function() {
 gulp.task('zip', gulp.series('clean-dist','copy-dist','zip-dist','clean-dist2'));
 
 gulp.task('clean', function () {
-    return gulp.src('./build/**',{read: false,allowEmpty: true})
+    return gulp.src('./build/*',{read: false,allowEmpty: true})
         .pipe(clean({force: true}));
 });
 
