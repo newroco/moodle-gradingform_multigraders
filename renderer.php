@@ -335,6 +335,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         if(($userIsAllowedToGrade || $allowFinalGradeEdit) &&
             $currentRecord === null &&
             !$this->gradingDisabled){
+            echo 'in';
 
             $additionalClass = '';
             $newRecord = new stdClass();
@@ -526,10 +527,17 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                 'checked' => 'checked');
             if ($record->type != gradingform_multigraders_instance::GRADE_TYPE_FINAL) {
                 unset($atts['checked']);
+                $buttonAtts = array(
+                    'name' => $this->elementName . '[final_grade_publish]',
+                    'type' => 'submit',
+                    'class' => 'btn btn-primary',
+                );
+                $checkboxLabelorButton = html_writer::tag('button',get_string('final_grade_check', 'gradingform_multigraders'),array_merge($buttonAtts, $commonAtts));
+            }else{
+                $checkboxLabelorButton = html_writer::tag('span',get_string('final_grade_message', 'gradingform_multigraders'));
             }
             $checkbox = html_writer::empty_tag('input', array_merge($atts, $commonAtts));
-            $checkboxLabel = html_writer::tag('span', get_string('final_grade_check', 'gradingform_multigraders'));
-            $finalGrade = html_writer::tag('div', $hiddenFinal . $checkbox . $checkboxLabel);
+            $finalGrade = html_writer::tag('div', $hiddenFinal . $checkbox . $checkboxLabelorButton);
         }
         //require second grader
         $atts = array(

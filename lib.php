@@ -1090,7 +1090,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
         $this->options->userID = self::get_userID_for_itemID($this->options->itemID);
 
 
-         if($USER->id == 634 || $USER->id == 652){
+         /*if($USER->id == 634 || $USER->id == 652){
             /* $gradinginfo = grade_get_grades($PAGE->cm->get_course()->id,
                  'mod',
                  'assign',
@@ -1104,7 +1104,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
             asort($vars);
             $echo = highlight_string("<?php\n\$obj =\n" . var_export($ctrl, true) . ";\n?>");
             $echo .= highlight_string("<?php\n\$methods =\n" . var_export($methods, true) . ";\n?>");
-            $echo .= highlight_string("<?php\n\$vars =\n" . var_export(array_keys($vars), true) . ";\n?>");*/
+            $echo .= highlight_string("<?php\n\$vars =\n" . var_export(array_keys($vars), true) . ";\n?>");
 
             ob_start();
             //$opts = make_grades_menu(-5);
@@ -1117,7 +1117,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
 
             ob_end_clean();
             $html .= html_writer::tag('div', $echo, array('class' => 'dump'));
-        }
+        }*/
 
         $html .= $this->get_controller()->get_renderer($page)->display_form( $mode,$this->options, $values,  $gradingformelement->getName(),$this->validationErrors,$this->getGradeRange() );
         return $html;

@@ -142,6 +142,9 @@
      -ms-filter: unset);
      filter: unset;
  }
+ .multigraders_grade .final_grade_check{
+     display: none;
+ }
  .multigraders_grade .grader{
      float: left;
      min-width: 80px;

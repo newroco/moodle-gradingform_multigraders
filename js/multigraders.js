@@ -128,6 +128,10 @@ M.gradingform_multigraders.init = function(Y, options) {
             });
         }
     });
+    Y.all('.multigraders_grade button[name="advancedgrading[final_grade_publish]"]').on('click', function(e) {
+        Y.one('.multigraders_grade input.final_grade_check').set('checked',true);
+        M.gradingform_multigraders.eventFire(Y.one('div[data-region="grade-actions"] button[name=savechanges]')._node,'click');
+    });
 };
 M.gradingform_multigraders.updateGrade = function(element) {
     var formula = Y.one(element).ancestor(".multigraders_grade").one('input.grade,select.grade').getAttribute('data-formula');
@@ -206,4 +210,13 @@ M.gradingform_multigraders.nl2br = function(str) {
 }
 M.gradingform_multigraders.isNumeric = function(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);
+}
+M.gradingform_multigraders.eventFire = function(el, etype){
+    if (el.fireEvent) {
+        el.fireEvent('on' + etype);
+    } else {
+        var evObj = document.createEvent('Events');
+        evObj.initEvent(etype, true, false);
+        el.dispatchEvent(evObj);
+    }
 }

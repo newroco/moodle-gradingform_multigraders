@@ -46,6 +46,7 @@ $string['secondary_graders'] = 'Secondary graders';
 $string['secondary_graders_help'] = 'This is a list of teachers to be notified in case a second grader is required for an assignment';
 $string['require_second_grader'] = 'Request second grader';
 $string['final_grade_check'] = 'Publish grade?';
+$string['final_grade_message'] = 'Grade is published';
 //$string['no_of_graders'] = 'Number of graders';
 //$string['no_of_gradersexplained'] = '{$a} graders required for the final grade.';
 //$string['grading_type'] = 'How to determine the final grade';

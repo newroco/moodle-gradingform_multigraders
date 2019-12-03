@@ -4,6 +4,8 @@ based on Marking Guide grading form written by Dan Marsden <dan@danmarsden.com>
 
 # How to install:
 
+gulp build - to prepare the distribution version then 
+gulp zip - to prepare the archive under dist folder.
 Add the multigrades archive to install plugin section of moodle Administration or Extract the "multigraders" folder from archive into /<your moodle folder>/grade/grading/form/
 From admin dashboard, check for updates, approve the installation of the new plugin it discovers.
 
