@@ -61,21 +61,14 @@ class gradingform_multigraders_editform extends moodleform {
         $areaid = required_param('areaid', PARAM_INT);
         $manager = get_grading_manager($areaid);
 
-        $arrUsers = Array();
-        $usersTotal = get_users(false,'',true);
-        for($i=0; $i < $usersTotal/100; ++$i){
-            $dbUsers = get_users(true,'',true,null,'lastname ASC,firstname ASC',
-                $firstinitial='', $lastinitial='', $page=$i*100, $recordsperpage=100, $fields='id,firstname,lastname');
-            foreach($dbUsers as $id => $oUser){
-                if(has_capability('mod/assignment:grade', $manager->get_context(),$id)){
-                    $arrUsers[$id] = $oUser->firstname.' '.$oUser->lastname;
-                }
-            }
+        $context = $manager->get_context();
+        $graders = get_enrolled_users($context, 'mod/assignment:grade', 0, 'u.*', 'u.lastname ASC, u.firstname ASC');
+        foreach ($graders as $grader) {
+            $graders[$grader->id] = fullname($grader);
         }
 
-
-        $select = $form->addElement('select', 'secondary_graders_id_list', get_string('secondary_graders', 'gradingform_multigraders'),
-            $arrUsers);
+        $select = $form->addElement('select', 'secondary_graders_id_list',
+                get_string('secondary_graders', 'gradingform_multigraders'), $graders);
         $select->setMultiple(true);
         $form->addHelpButton('secondary_graders_id_list', 'secondary_graders', 'gradingform_multigraders');
 
