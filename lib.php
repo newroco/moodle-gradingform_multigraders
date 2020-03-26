@@ -148,7 +148,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
         $newdefinition->secondary_graders_id_list = $setd;// stored in database table.
 
         foreach (array('status', 'name', 'description','secondary_graders_id_list','criteria','blind_marking','show_intermediary_to_students','auto_calculate_final_method') as $key) {
-            if (isset($newdefinition->$key) && $newdefinition->$key != $this->definition->$key) {
+            if (isset($newdefinition->$key) && isset($this->definition->$key) && $newdefinition->$key != $this->definition->$key) {
                 $haschanges[1] = true;
             }
         }
@@ -241,7 +241,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
             $this->definition->blind_marking = 0;
             $this->definition->show_intermediary_to_students = 1;
             $this->definition->auto_calculate_final_method = 0;
-            $this->secondary_graders_id_list = Array();
+            $this->definition->secondary_graders_id_list = Array();
             $this->definition->empty = true;
             $this->definition->criteria = '';
         }else{
