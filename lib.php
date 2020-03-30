@@ -1000,7 +1000,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
 
         $graderName = '';
         if($id == $USER->id){
-            $graderName = $USER->firstname . ' ' . $USER->lastname;
+            $graderName = fullname($USER);
         }else {
             $user = $DB->get_record('user', array('id' => $id));
             if ($user) {

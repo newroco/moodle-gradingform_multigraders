@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/newroco/moodle-multigraders.git"
+    "url": "git+https://github.com/newroco/moodle-gradingform_multigraders.git"
   },
   "keywords": [
     "moodle",
@@ -30,14 +30,12 @@
     "gulp-rsync": "0.0.8",
     "gulp-sourcemaps": "^2.6.4",
     "gulp-uglify": "^3.0.1",
-    "gulp-zip": "^5.0.0",
+    "gulp-zip": "^5.0.1",
     "run-sequence": "^0.3.2"
   },
   "bugs": {
-    "url": "https://github.com/newroco/moodle-multigraders/issues"
+    "url": "https://github.com/newroco/moodle-gradingform_multigraders/issues"
   },
-  "homepage": "https://github.com/newroco/moodle-multigraders#readme",
-  "dependencies": {
-    "gulp-eslint": "^6.0.0"
-  }
+  "homepage": "https://github.com/newroco/moodle-gradingform_multigraders#readme",
+  "dependencies": {}
 }

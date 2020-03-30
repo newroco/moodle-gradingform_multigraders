@@ -41,8 +41,8 @@ gulp.task('styles', function() {
 });
 
 gulp.task('header', function() {
-    var pkg = require('./package.json');
-    var banner = ['/**',
+    const pkg = require('./package.json');
+    const banner = ['/**',
         ' * <%= pkg.name %> - <%= pkg.description %>',
         ' * @version v<%= pkg.version %>',
         ' * @author <%= pkg.author %>',
