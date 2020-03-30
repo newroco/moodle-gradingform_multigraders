@@ -19,7 +19,7 @@
  *
  * @package    gradingform_multigraders
  * @category  upgrade
- * @copyright 2016 Jun Pataleta
+ * @copyright   2018 Lucian Pricop <contact@lucianpricop.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

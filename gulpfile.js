@@ -62,7 +62,7 @@ gulp.task('header', function() {
 });
 
 gulp.task('copy-to-build', function() {
-    return gulp.src(['./backup/**/*','./db/**/*','./lang/**/*','./**/*.php','./README.md','./LICENSE','!./build/**/*'],
+    return gulp.src(['./backup/**/*','./classes/**/*','./db/**/*','./lang/**/*','./**/*.php','./README.md','./LICENSE','!./build/**/*'],
         {base: './'})
         .pipe(gulp.dest('./build/'))
 });

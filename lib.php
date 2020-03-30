@@ -25,9 +25,9 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/grade/grading/form/lib.php');
-require_once $CFG->libdir.'/mathslib.php';
+require_once($CFG->libdir.'/mathslib.php');
 require_once($CFG->libdir . '/messagelib.php');
-require_once $CFG->dirroot.'/grade/lib.php';
+require_once($CFG->dirroot.'/grade/lib.php');
 
 /**
  * This controller encapsulates the multi grading logic
@@ -45,7 +45,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
     /** form display mode: Preview the form design (for person with manage permission) */
     const DISPLAY_PREVIEW       = 3;
     /** form display mode: Preview the form (for people being graded) */
-    const DISPLAY_PREVIEW_GRADED= 8;
+    const DISPLAY_PREVIEW_GRADED = 8;
     /** form display mode: For evaluation, enabled (teacher grades a student) */
     const DISPLAY_EVAL          = 4;
     /** form display mode: For evaluation, enabled and allow to change the final (admin grades a student) */
@@ -91,7 +91,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
      * @return void
      */
     public function extend_navigation(global_navigation $navigation, navigation_node $node=null) {
-        //no need to extra details in menu
+        // no need to extra details in menu
     }
 
     /**
@@ -144,10 +144,10 @@ class gradingform_multigraders_controller extends gradingform_controller {
         $newdefinition->show_intermediary_to_students = isset($newdefinition->show_intermediary_to_students) ? $newdefinition->show_intermediary_to_students : 0;
 
         $set = $newdefinition->secondary_graders_id_list;
-        $setd = implode(',',$set); // implode ids with comma
+        $setd = implode(',', $set); // implode ids with comma
         $newdefinition->secondary_graders_id_list = $setd;// stored in database table.
 
-        foreach (array('status', 'name', 'description','secondary_graders_id_list','criteria','blind_marking','show_intermediary_to_students','auto_calculate_final_method') as $key) {
+        foreach (array('status', 'name', 'description', 'secondary_graders_id_list', 'criteria', 'blind_marking', 'show_intermediary_to_students', 'auto_calculate_final_method') as $key) {
             if (isset($newdefinition->$key) && isset($this->definition->$key) && $newdefinition->$key != $this->definition->$key) {
                 $haschanges[1] = true;
             }
@@ -163,25 +163,25 @@ class gradingform_multigraders_controller extends gradingform_controller {
         }
         if ($doupdate) {
             parent::update_definition($newdefinition, $usermodified);
-            //add/update attributes in custom table
+            // add/update attributes in custom table
             $data = new stdClass();
             $data->id = $this->definition->id;
-            if(!isset($newdefinition->blind_marking)){
+            if (!isset($newdefinition->blind_marking)) {
                 $data->blind_marking = 0;
                 $data->show_intermediary_to_students = 1;
                 $data->auto_calculate_final_method = 0;
                 $data->secondary_graders_id_list = Array();
                 $data->criteria = '';
-            }else {
+            } else {
                 $data->blind_marking = $newdefinition->blind_marking;
                 $data->show_intermediary_to_students = $newdefinition->show_intermediary_to_students;
                 $data->auto_calculate_final_method = $newdefinition->auto_calculate_final_method;
                 $data->secondary_graders_id_list = $newdefinition->secondary_graders_id_list;
                 $data->criteria = $newdefinition->criteria['text'];
             }
-            if(isset($this->definition->empty)){
-                $DB->insert_record_raw('multigraders_definitions', $data,false,false,true);
-            }else{
+            if (isset($this->definition->empty)) {
+                $DB->insert_record_raw('multigraders_definitions', $data, false, false, true);
+            } else{
                 $DB->update_record('multigraders_definitions', $data);
             }
             $this->load_definition();
@@ -197,12 +197,12 @@ class gradingform_multigraders_controller extends gradingform_controller {
      */
     public function mark_for_regrade() {
         global $DB;
-        //if ($this->has_active_instances()) {
+        // if ($this->has_active_instances()) {
             $conditions = array('definitionid'  => $this->definition->id,
                         'status'  => gradingform_instance::INSTANCE_STATUS_ACTIVE);
             $DB->set_field('grading_instances', 'status', gradingform_instance::INSTANCE_STATUS_NEEDUPDATE, $conditions);
 
-            //change the final grade type from final to intermediary
+            // change the final grade type from final to intermediary
             /*$results = $DB->get_records('grading_instances',
                 array('definitionid'  => $this->definition->id),null,'id,itemid');
             $arrItemIDs = Array();
@@ -213,7 +213,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
                 $conditions = array('itemid' => $itemID);
                 $DB->set_field('multigraders_grades', 'type', gradingform_multigraders_instance::GRADE_TYPE_INTERMEDIARY, $conditions);
             }*/
-        //}
+        // }
     }
 
     /**

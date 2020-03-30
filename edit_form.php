@@ -120,7 +120,7 @@ class gradingform_multigraders_editform extends moodleform {
      *
      */
     public function definition_after_data() {
-        $form = $this->_form;
+        //$form = $this->_form;
     }
 
     /**
