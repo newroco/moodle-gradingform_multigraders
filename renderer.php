@@ -32,13 +32,27 @@ defined('MOODLE_INTERNAL') || die();
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class gradingform_multigraders_renderer extends plugin_renderer_base {
+    /** @var stdClass with minRange of maxRange of the grading range */
     public $gradeRange;
+    /** @var array of errors per <grader><record type> values */
     public $validationErrors;
+    /** @var string the name of the form element (in editor mode) or the prefix for div ids (in view mode) */
     public $elementName;
+    /** @var float stores the calculation of the next grade based on the previous */
     protected $defaultNextGrade;
+    /** @var stdClass stores the calculations of the next outcomes base don the previous */
     protected $defaultNextOutcomes;
-    protected $outcomes,$options,$scaleid,$gradingDisabled;
+    /** @var array of outcomes */
+    protected $outcomes;
+    /** @var array of options defined in the gradingform definition */
+    protected $options;
+    /** @var int id of the scale used for grade calculations */
+    protected $scaleid;
+    /** @var boolean - tells if grading is disabled for this item */
+    protected $gradingDisabled;
+    /** @var string the calculation formula for outcomes */
     protected $outcomesCalculationFormula;
+    /** @var stdClass with minRange of maxRange of the value range for outcomes */
     protected $outcomesValueRange;
 
     /**
@@ -49,6 +63,8 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
      * @param object $options
      * @param array $values evaluation result
      * @param string $elementName the name of the form element (in editor mode) or the prefix for div ids (in view mode)
+     * @param array $validationErrors array of errors per <grader><record type> values
+     * @param stdClass $gradeRange with minRange of maxRange of the grading range
      * @return string
      */
     public function display_form($mode, $options, $values = null, $elementName = 'multigraders', $validationErrors = Array(), $gradeRange = null) {
@@ -396,6 +412,14 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         return html_writer::tag('div',$output . $finalGradeMessage , array('class' => 'gradingform_multigraders'));
     }
 
+    /**
+     * Returns compiled html to display one grader record
+     *
+     * @param gradingform_multigraders_instance $record
+     * @param string $additionalClass
+     * @param int $mode
+     * @return string
+     */
     public function display_grade($record,$additionalClass = '',$mode = gradingform_multigraders_controller::DISPLAY_EVAL) {
         if($record === null){
             return '';
@@ -567,6 +591,12 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         return html_writer::tag('div', $outcomesDiv . $gradeWrapDiv. $feedbackDiv . $showToStudents . $requireSecondGrader. $finalGrade. $errorDiv, array('class' => 'coursebox multigraders_grade '.$additionalClass));
     }
 
+    /**
+     * Returns the text to show for the grader of a record
+     *
+     * @param gradingform_multigraders_instance $record
+     * @return mixed
+     */
     public function display_grader_details($record){
         if($record === null || !isset($record->grader)){
             return get_string('graderdetails_display', 'gradingform_multigraders','??');
@@ -575,7 +605,13 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         return get_string('graderdetails_display', 'gradingform_multigraders',gradingform_multigraders_instance::get_user_url($record->grader));
     }
 
-
+    /**
+     * Returns the html to display the outcome data for a particular record
+     *
+     * @param gradingform_multigraders_instance $record
+     * @param int $mode
+     * @return string
+     */
     public function display_outcomes($record,$mode = gradingform_multigraders_controller::DISPLAY_EVAL) {
         if(!$this->outcomes) {
             return '';

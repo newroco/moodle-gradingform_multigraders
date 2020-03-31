@@ -18,7 +18,6 @@
  * This file registers the plugin as a message provider.
  *
  * @package   gradingform_multigraders
- * @category  messages
  * @copyright 2018 Lucian Pricop <contact@lucianpricop.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

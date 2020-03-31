@@ -57,10 +57,6 @@ class gradingform_multigraders_controller extends gradingform_controller {
     /** form display mode: Display filled form (i.e. students see their grades) */
     const DISPLAY_VIEW          = 7;
 
-    const DEFAULT_NO_OF_GRADERS = 2;
-    const DEFAULT_GRADING_TYPE = 10;
-
-
     /** @var stdClass|false the definition structure */
     protected $moduleinstance = false;
 
@@ -389,7 +385,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
                 $extraselect='id IN ('.$this->definition->secondary_graders_id_list.')');
             $secondaryGraders = '';
             foreach($dbUsers as $id => $oUser){
-                $secondaryGraders .= $oUser->firstname.' '.$oUser->lastname.', ';
+                $secondaryGraders .= fullname($oUser).', ';
             }
             $secondaryGraders = substr($secondaryGraders,0,-2);
             $text .= "\n".get_string('secondary_graders_list','gradingform_multigraders',$secondaryGraders);
@@ -572,6 +568,8 @@ class gradingform_multigraders_controller extends gradingform_controller {
 
 
     /**
+     * Returns a new instance of external_single_structure
+     *
      * @return external_single_structure
      * @see gradingform_controller::get_external_definition_details()
      * @since Moodle 2.5
@@ -620,24 +618,37 @@ class gradingform_multigraders_controller extends gradingform_controller {
 }
 
 /**
- * Class to manage one form grading instance. Stores information and performs actions like
- * update, copy, validate, submit, etc.
+ * Class to manage one form grading instance.
+ *
+ * Stores information and performs actions like update, copy, validate, submit, etc.
  *
  * @package     gradingform_multigraders
  * @copyright   2018 Lucian Pricop <contact@lucianpricop.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class gradingform_multigraders_instance extends gradingform_instance {
+    /** @var array of errors per <grader><record type> values */
     public $validationErrors;
+    /** @var array of options defined in the gradingform definition */
     public $options;
+    /** @var stdClass with minRange of maxRange of the grading range */
     protected $gradeRange;
+    /** @var array of grades for this instance */
     protected $instanceGrades;
-    protected $updateGrade;
+    /** @var string debugging log */
     protected $log;
 
+    /** Intermediate grade type - e.g not the final one */
     const GRADE_TYPE_INTERMEDIARY = 0;
+    /** Final grade */
     const GRADE_TYPE_FINAL = 1;
 
+    /**
+     * Creates a gradingform_multigraders instance
+     *
+     * @param gradingform_controller $controller
+     * @param stdClass $data
+     */
     public function __construct($controller, $data) {
         parent::__construct($controller,$data);
         $definition = $this->get_controller()->get_definition();
@@ -971,7 +982,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
     /**
      * Returns the id of the user who gave the final grade
      *
-     * @param $value the form value in case not to use the current
+     * @param $value int - the form value in case not to use the current
      * @return int
      */
     public function get_final_grader($value = null) {
@@ -989,7 +1000,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
     /**
      * Returns the URL of the user's profile with their name as text
      *
-     * @param $id the id of the user
+     * @param $id int the id of the user
      * @return string URL of the user's profile
      */
     static public function get_user_url($id){
@@ -1004,7 +1015,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
         }else {
             $user = $DB->get_record('user', array('id' => $id));
             if ($user) {
-                $graderName = $user->firstname . ' ' . $user->lastname;
+                $graderName = fullname($user);
             }else{
                 $graderName = get_string('not found');
             }
@@ -1123,6 +1134,11 @@ class gradingform_multigraders_instance extends gradingform_instance {
         return $html;
     }
 
+    /**
+     * Returns the User ID of a grading item ID
+     * @param int $itemID
+     * @return int|null
+     */
     static public function get_userID_for_itemID($itemID){
         global $DB;
 
