@@ -982,7 +982,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
     /**
      * Returns the id of the user who gave the final grade
      *
-     * @param $value int - the form value in case not to use the current
+     * @param  int|null $value the form value or null to use the current instance value
      * @return int
      */
     public function get_final_grader($value = null) {
@@ -1000,7 +1000,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
     /**
      * Returns the URL of the user's profile with their name as text
      *
-     * @param $id int the id of the user
+     * @param int $id the id of the user
      * @return string URL of the user's profile
      */
     static public function get_user_url($id){
