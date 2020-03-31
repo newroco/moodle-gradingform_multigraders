@@ -77,7 +77,7 @@ class restore_gradingform_multigraders_plugin extends restore_gradingform_plugin
         $oldid = $data->id;
         $data->id = $this->get_new_parentid('grading_definition');
 
-        $newid = $DB->insert_record_raw('multigraders_definitions', $data,true,false,true);
+        $newid = $DB->insert_record_raw('gradingform_multigraders_def', $data,true,false,true);
         $this->set_mapping('gradingform_multigraders_definition', $oldid, $newid);
     }
 
@@ -95,6 +95,6 @@ class restore_gradingform_multigraders_plugin extends restore_gradingform_plugin
         //$instance = $this->get_mapping('grading_instance', $data->instanceid);
         $data->itemid = $instance->itemid;
 
-        $DB->insert_record('multigraders_grades', $data);
+        $DB->insert_record('gradingform_multigraders_gra', $data);
     }
 }

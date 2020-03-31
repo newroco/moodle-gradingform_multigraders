@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component  = 'gradingform_multigraders';
-$plugin->version    = 2020033001;
+$plugin->version    = 2020033100;
 $plugin->requires   = 2017111300;
 $plugin->maturity   = MATURITY_STABLE;
 $plugin->release    = '1.4';

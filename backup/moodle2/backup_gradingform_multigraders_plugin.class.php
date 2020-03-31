@@ -54,7 +54,7 @@ class backup_gradingform_multigraders_plugin extends backup_gradingform_plugin {
         $plugin->add_child($pluginwrapper);
 
         // Set sources to populate the data.
-        $pluginwrapper->set_source_table('multigraders_definitions',
+        $pluginwrapper->set_source_table('gradingform_multigraders_def',
                 array('id' => backup::VAR_PARENTID));
 
         return $plugin;
@@ -88,7 +88,7 @@ class backup_gradingform_multigraders_plugin extends backup_gradingform_plugin {
 
         // Set sources to populate the data.
 
-        $grade->set_source_table('multigraders_grades',
+        $grade->set_source_table('gradingform_multigraders_gra',
             array('instanceid' => backup::VAR_PARENTID));
 
         // No need to annotate ids or files yet (one day when remark field supports

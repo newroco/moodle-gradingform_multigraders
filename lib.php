@@ -180,9 +180,9 @@ class gradingform_multigraders_controller extends gradingform_controller {
                 $data->criteria = $newdefinition->criteria['text'];
             }
             if (isset($this->definition->empty)) {
-                $DB->insert_record_raw('multigraders_definitions', $data, false, false, true);
+                $DB->insert_record_raw('gradingform_multigraders_def', $data, false, false, true);
             } else{
-                $DB->update_record('multigraders_definitions', $data);
+                $DB->update_record('gradingform_multigraders_def', $data);
             }
             $this->load_definition();
         }
@@ -211,7 +211,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
             }
             foreach (array_keys($arrItemIDs) as $itemID) {
                 $conditions = array('itemid' => $itemID);
-                $DB->set_field('multigraders_grades', 'type', gradingform_multigraders_instance::GRADE_TYPE_INTERMEDIARY, $conditions);
+                $DB->set_field('gradingform_multigraders_gra', 'type', gradingform_multigraders_instance::GRADE_TYPE_INTERMEDIARY, $conditions);
             }*/
         // }
     }
@@ -235,7 +235,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
         }
 
         $this->definition = $definition;
-        $definitionExtras = $DB->get_record('multigraders_definitions', array('id' => $this->definition->id), '*');
+        $definitionExtras = $DB->get_record('gradingform_multigraders_def', array('id' => $this->definition->id), '*');
         if (!$definitionExtras) {
             //Populate with defaults
             $this->definition->blind_marking = 0;
@@ -484,9 +484,9 @@ class gradingform_multigraders_controller extends gradingform_controller {
         // Get the list of instances.
         $instances = array_keys($DB->get_records('grading_instances', array('definitionid' => $this->definition->id), '', 'id'));
         // Delete instances.
-        $DB->delete_records_list('multigraders_grades', 'id', $instances);
+        $DB->delete_records_list('gradingform_multigraders_gra', 'id', $instances);
         //delete extra defition details
-        $DB->delete_records('multigraders_definitions', array('id' => $this->definition->id));
+        $DB->delete_records('gradingform_multigraders_def', array('id' => $this->definition->id));
     }
 
     /**
@@ -695,7 +695,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
     public function cancel() {
         global $DB;
         parent::cancel();
-        $DB->delete_records('multigraders_grades', array('instanceid' => $this->get_id()));
+        $DB->delete_records('gradingform_multigraders_gra', array('instanceid' => $this->get_id()));
     }
 
     /**
@@ -714,7 +714,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
             if($grader == $USER->id) {
                 $record['instanceid'] = $instanceid;
                 $record['itemid'] = $itemid;
-                $DB->insert_record('multigraders_grades', $record);
+                $DB->insert_record('gradingform_multigraders_gra', $record);
             }
         }*/
         return $instanceid;
@@ -781,7 +781,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
     public function get_instance_grades($force = false) {
         global $DB;
         if ($this->instanceGrades === null || $force) {
-            $records = $DB->get_records('multigraders_grades', array('itemid' => $this->getItemID()), 'timestamp');
+            $records = $DB->get_records('gradingform_multigraders_gra', array('itemid' => $this->getItemID()), 'timestamp');
             $this->instanceGrades = array('grades' => array());
             foreach ($records as $record) {
                 $record->grade = (float)$record->grade; // Strip trailing 0.
@@ -821,7 +821,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
             if(has_capability('moodle/site:config', $systemcontext)) {
                 $this->log .= 'update() moodle/site:config is true. ';
                 parent::update($data);
-                $DB->delete_records('multigraders_grades',array('itemid' => $this->getItemID()));
+                $DB->delete_records('gradingform_multigraders_gra',array('itemid' => $this->getItemID()));
                 $this->data->rawgrade = -1;
                 $newdata = new stdClass();
                 $newdata->id = $this->get_id();
@@ -864,7 +864,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
         }
         //updating instanceid for all records of the same item
         $conditions = array('itemid' => $data['itemid']);
-        $DB->set_field('multigraders_grades', 'instanceid', $this->get_id(), $conditions);
+        $DB->set_field('gradingform_multigraders_gra', 'instanceid', $this->get_id(), $conditions);
 
         $gradeType = gradingform_multigraders_instance::GRADE_TYPE_INTERMEDIARY;
         $gradingFinal = false;
@@ -878,7 +878,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
         if(isset($data['grade']) && $data['grade'] !='') {
         }
         if($currentRecord !== null){
-            $currentRecordID = $DB->get_field('multigraders_grades','id',
+            $currentRecordID = $DB->get_field('gradingform_multigraders_gra','id',
                 array('itemid' => $data['itemid'],'grader' => $USER->id));
         }
 
@@ -897,9 +897,9 @@ class gradingform_multigraders_instance extends gradingform_instance {
         if($currentRecordID){
             $newrecord['id'] = $currentRecordID;
             unset($newrecord['timestamp']);
-            $DB->update_record('multigraders_grades', $newrecord);
+            $DB->update_record('gradingform_multigraders_gra', $newrecord);
         }else {
-            $DB->insert_record('multigraders_grades', $newrecord);
+            $DB->insert_record('gradingform_multigraders_gra', $newrecord);
         }
         //grade type is not null only when the grading owner(or first/final grader) is saving the data
         if($gradingFinal){
@@ -928,12 +928,12 @@ class gradingform_multigraders_instance extends gradingform_instance {
     }
 
     /**
-     * Removes the attempt from the  multigraders_grades table
+     * Removes the attempt from the  gradingform_multigraders_gra table
      * @param array $data the attempt data
      */
     public function clear_attempt($data) {
         global $DB;
-        $DB->delete_records('multigraders_grades',array('grader' => $data['grader'], 'instanceid' => $this->get_id()));
+        $DB->delete_records('gradingform_multigraders_gra',array('grader' => $data['grader'], 'instanceid' => $this->get_id()));
     }
 
     /**

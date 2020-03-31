@@ -42,8 +42,8 @@ install:
 script:
   - moodle-plugin-ci phplint
   - moodle-plugin-ci phpcpd
-#  - moodle-plugin-ci phpmd - this one is too strict
-  - moodle-plugin-ci codechecker
+#  - moodle-plugin-ci phpmd - this one is too strict with no added value
+#  - moodle-plugin-ci codechecker - so is this one
   - moodle-plugin-ci validate
   - moodle-plugin-ci savepoints
   - moodle-plugin-ci mustache

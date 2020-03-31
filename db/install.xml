@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="grade/grading/form/multigraders/db" VERSION="20200330" COMMENT="XMLDB file for Moodle gradingform_multigraders plugin"
+<XMLDB PATH="grade/grading/form/multigraders/db" VERSION="20200331" COMMENT="XMLDB file for Moodle gradingform_multigraders plugin"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
-    <TABLE NAME="multigraders_definitions" COMMENT="Stores the grading definitions extra details.">
+    <TABLE NAME="gradingform_multigraders_def" COMMENT="Stores the grading definitions extra details.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="The ID of the grading definition"/>
         <FIELD NAME="blind_marking" TYPE="int" LENGTH="1" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="Activates or deactivates blind marking, so that intermediary markers don't see previous grades"/>
@@ -18,7 +18,7 @@
         <KEY NAME="fk_id" TYPE="foreign" FIELDS="id" REFTABLE="grading_definitions" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="multigraders_grades" COMMENT="Grading information about a single grading for a single assignment submission.">
+    <TABLE NAME="gradingform_multigraders_gra" COMMENT="Grading information about a single grading for a single assignment submission.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="instanceid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="The grading instance this grade belongs to."/>
