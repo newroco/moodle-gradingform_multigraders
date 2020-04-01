@@ -17,8 +17,8 @@ M.gradingform_multigraders.init = function(Y, options) {
     this.number_of_grades = Y.all('.multigraders_grade').size();
     //console.log('init multigraders ' + this.grading_final + '  ' + this.user_is_allowed_edit + '  ' + this.number_of_grades);
     //hide global outcomes
-    var advancedGradeContainer = Y.one('.gradingform_multigraders').ancestor('.fitem');
-    var currentGradeContainer = Y.one('.currentgrade').ancestor('.fitem');
+    let advancedGradeContainer = Y.one('.gradingform_multigraders').ancestor('.fitem');
+    let currentGradeContainer = Y.one('.currentgrade').ancestor('.fitem');
 
     while(advancedGradeContainer && advancedGradeContainer.next() && advancedGradeContainer.next() != currentGradeContainer){
         advancedGradeContainer = advancedGradeContainer.next();
@@ -36,15 +36,15 @@ M.gradingform_multigraders.init = function(Y, options) {
     }else{
         //copy values from final outcomes to core outcomes
         Y.all('.multigraders_grade.finalGrade .outcome select').each(function(node,index){
-            var outcomeIndex = node.getAttribute('data-index');
-            var coreOutcome = Y.one('#menuoutcome_' + outcomeIndex);
+            const outcomeIndex = node.getAttribute('data-index');
+            let coreOutcome = Y.one('#menuoutcome_' + outcomeIndex);
             if(coreOutcome){
                 coreOutcome.set('value',node.get('value'));
             }
             //add change event for final outcomes so on each change, the core gets updated as well.
             node.on('change',function(e){
-                var outcomeIndex = e.target.getAttribute('data-index');
-                var coreOutcome = Y.one('#menuoutcome_' + outcomeIndex);
+                const outcomeIndex = e.target.getAttribute('data-index');
+                let coreOutcome = Y.one('#menuoutcome_' + outcomeIndex);
                 if(coreOutcome){
                     coreOutcome.set('value',e.target.get('value'));
                 }
@@ -71,18 +71,18 @@ M.gradingform_multigraders.init = function(Y, options) {
         }
     });
     Y.all('.multigraders_grade .copy_button').on('click', function(e) {
-        var graderName = Y.one(e.currentTarget).ancestor(".multigraders_grade").one('.grader_name').get('text');
-        var graderFeedback = Y.one(e.currentTarget).ancestor(".multigraders_grade").one('.grader_feedback').get('value');
-        var currFeedback = Y.one('#id_assignfeedbackcomments_editoreditable').getHTML();
+        const graderName = Y.one(e.currentTarget).ancestor(".multigraders_grade").one('.grader_name').get('text');
+        const graderFeedback = Y.one(e.currentTarget).ancestor(".multigraders_grade").one('.grader_feedback').get('value');
+        let currFeedback = Y.one('#id_assignfeedbackcomments_editoreditable').getHTML();
         if(Y.one('#id_assignfeedbackcomments_editoreditable').get('text') != ''){
             currFeedback += "<br/><br/>";
         }
-        var newFeedback = currFeedback + graderName + "<br/>---------------<br/>"+ M.gradingform_multigraders.nl2br(graderFeedback);
+        const newFeedback = currFeedback + graderName + "<br/>---------------<br/>"+ M.gradingform_multigraders.nl2br(graderFeedback);
         Y.one('#id_assignfeedbackcomments_editoreditable').setHTML(newFeedback);
         Y.one('#id_assignfeedbackcomments_editoreditable').focus();
     });
     Y.all('.gradingform_multigraders .delete_button').on('click', function(e) {
-        var yes = confirm('Are you sure?');
+        const yes = confirm('Are you sure?');
         if(yes){
             jQuery('input.multigraders_delete_all').val('true');
             jQuery('div[data-region="grade-actions"] button[name="savechanges"]').trigger( "click" );
@@ -113,7 +113,7 @@ M.gradingform_multigraders.init = function(Y, options) {
                 if(!M.gradingform_multigraders.grading_final){
                     return;
                 }
-                var checkbox = event.target;
+                let checkbox = event.target;
                 if(checkbox.get('checked')) {
                     Y.all('input[name="sendstudentnotifications"]').set('checked',false).set('disabled','disabled');
                     Y.one('.multigraders_grade input.final_grade_check').set('checked',false);
@@ -134,19 +134,19 @@ M.gradingform_multigraders.init = function(Y, options) {
     });
 };
 M.gradingform_multigraders.updateGrade = function(element) {
-    var formula = Y.one(element).ancestor(".multigraders_grade").one('input.grade,select.grade').getAttribute('data-formula');
-    var gradeRangeMin = parseInt(Y.one(element).ancestor(".multigraders_grade").one('input.grade,select.grade').getAttribute('data-grade-range-min'),10);
-    var gradeRangeMax = parseInt(Y.one(element).ancestor(".multigraders_grade").one('input.grade,select.grade').getAttribute('data-grade-range-max'),10);
-    var grade;
+    let formula = Y.one(element).ancestor(".multigraders_grade").one('input.grade,select.grade').getAttribute('data-formula');
+    let gradeRangeMin = parseInt(Y.one(element).ancestor(".multigraders_grade").one('input.grade,select.grade').getAttribute('data-grade-range-min'),10);
+    let gradeRangeMax = parseInt(Y.one(element).ancestor(".multigraders_grade").one('input.grade,select.grade').getAttribute('data-grade-range-max'),10);
+    let grade;
     if(!formula){
         return;
     }
     //get all outcome values
     Y.one(element).ancestor(".multigraders_grade").all('.outcome select[data-id]').each(function(node,index){
-        var outcomeId = node.getAttribute('data-id');
-        var outcomeVal = parseFloat(jQuery(node.getDOMNode()).children(':selected').text());
-       /* var rangeMin = parseInt(node.getAttribute('data-range-min'),10);
-        var rangeMax = parseInt(node.getAttribute('data-range-max'),10);
+        const outcomeId = node.getAttribute('data-id');
+        let outcomeVal = parseFloat(jQuery(node.getDOMNode()).children(':selected').text());
+       /* const rangeMin = parseInt(node.getAttribute('data-range-min'),10);
+        const rangeMax = parseInt(node.getAttribute('data-range-max'),10);
         //scale the value of the outcome to the range of the grade
         outcomeVal = (outcomeVal - rangeMin)/(rangeMax-rangeMin)*(gradeRangeMax-gradeRangeMin)+gradeRangeMin;*/
         outcomeVal = outcomeVal.toFixed(2);
@@ -168,21 +168,21 @@ M.gradingform_multigraders.updateGrade = function(element) {
     }else{
         grade = grade.toFixed(1);
     }
-    var ancestor = Y.one(element).ancestor(".multigraders_grade");
-    var gradeElement = ancestor.one('input.grade,select.grade');
-    var tag = gradeElement.get('tagName');
+    const ancestor = Y.one(element).ancestor(".multigraders_grade");
+    const gradeElement = ancestor.one('input.grade,select.grade');
+    const tag = gradeElement.get('tagName');
     if(tag == 'SELECT'){
-        var gradeElements = jQuery(ancestor.getDOMNode()).find('select.grade,input.grade_hidden');
+        let gradeElements = jQuery(ancestor.getDOMNode()).find('select.grade,input.grade_hidden');
         //check if the computed grade matches one of the values in the select
-        var selectedGrade = null;
-        var prevGrade = null;
-        var prevIntGrade = null;
+        let selectedGrade = null;
+        let prevGrade = null;
+        let prevIntGrade = null;
         gradeElement.get("options").each( function() {
             if(selectedGrade){
                 return;
             }
-            var value  = this.get('value');
-            var intVal = parseInt(this.get('text'),10);
+            let value  = this.get('value');
+            let intVal = parseInt(this.get('text'),10);
             if(intVal <= grade){
                 if(Math.abs(prevIntGrade-grade) < (grade - intVal)){
                     gradeElements.val(prevGrade);
@@ -205,7 +205,7 @@ M.gradingform_multigraders.nl2br = function(str) {
     if (typeof str === 'undefined' || str === null) {
         return '';
     }
-    var breakTag = '<br />';
+    const breakTag = '<br />';
     return (str + '').replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1' + breakTag + '$2');
 }
 M.gradingform_multigraders.isNumeric = function(n) {
@@ -215,7 +215,7 @@ M.gradingform_multigraders.eventFire = function(el, etype){
     if (el.fireEvent) {
         el.fireEvent('on' + etype);
     } else {
-        var evObj = document.createEvent('Events');
+        let evObj = document.createEvent('Events');
         evObj.initEvent(etype, true, false);
         el.dispatchEvent(evObj);
     }

@@ -824,9 +824,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
 
         //check first if an admin wants to delete everything for this grade
         //check if multigraders_delete_all parameter was sent
-        $this->log .= 'update() multigraders_delete_all: '.$data['multigraders_delete_all'].'. ';
         if(isset($data['multigraders_delete_all']) && $data['multigraders_delete_all']=='true') {
-            $this->log .= 'update() multigraders_delete_all is true. ';
             //check if user is admin
             $systemcontext = context_system::instance();
             if(has_capability('moodle/site:config', $systemcontext)) {
@@ -839,12 +837,9 @@ class gradingform_multigraders_instance extends gradingform_instance {
                 $newdata->rawgrade = -1;
                 $DB->update_record('grading_instances', $newdata);
             }
-            $this->log .= 'update() after delete. ';
-
             $this->get_instance_grades(true);
             return;
         }
-        $this->log .= 'update() after multigraders_delete_all. ';
 
         foreach ($currentFormData['grades'] as $grader=> $record) {
             if(!$firstGradeRecord){
@@ -887,6 +882,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
         }
         //adding a new record
         if(isset($data['grade']) && $data['grade'] !='') {
+
         }
         if($currentRecord !== null){
             $currentRecordID = $DB->get_field('gradingform_multigraders_gra','id',
@@ -930,10 +926,16 @@ class gradingform_multigraders_instance extends gradingform_instance {
         if((!$currentRecord || !$currentRecord->require_second_grader || $currentRecord->type != $gradeType) &&
             $gradeType != gradingform_multigraders_instance::GRADE_TYPE_FINAL &&
             $data['require_second_grader']){
+            $this->log .= ' in for notification ';
             $this->send_second_graders_notification($gradingFinal,$firstGradeRecord,$data['itemid']);
         }elseif($firstGradeRecord->grader != $USER->id){
             $this->send_initial_grader_notification($firstGradeRecord,$data['itemid']);
         }
+
+        /*$newdata = new stdClass();
+        $newdata->id = $currentRecordID;
+        $newdata->feedback = $this->log;
+        $DB->update_record('gradingform_multigraders_gra', $newdata);*/
 
         $this->get_instance_grades(true);
     }
@@ -1100,9 +1102,8 @@ class gradingform_multigraders_instance extends gradingform_instance {
         $this->options->itemID = $this->getItemID();
         $this->options->userID = self::get_userID_for_itemID($this->options->itemID);
 
-
-         /*if($USER->id == 634 || $USER->id == 652){
-            /* $gradinginfo = grade_get_grades($PAGE->cm->get_course()->id,
+         /* if($USER->id == 634 || $USER->id == 652){
+            /*$gradinginfo = grade_get_grades($PAGE->cm->get_course()->id,
                  'mod',
                  'assign',
                  $PAGE->cm->instance,
@@ -1118,14 +1119,8 @@ class gradingform_multigraders_instance extends gradingform_instance {
             $echo .= highlight_string("<?php\n\$vars =\n" . var_export(array_keys($vars), true) . ";\n?>");
 
             ob_start();
-            //$opts = make_grades_menu(-5);
             var_dump($this->log);
-            var_dump($gradingformelement->_flagFrozen);
-             var_dump($gradingformelement->_persistantFreeze);
-//            var_dump($this->options);
-
             $echo = ob_get_contents();
-
             ob_end_clean();
             $html .= html_writer::tag('div', $echo, array('class' => 'dump'));
         }*/
@@ -1205,7 +1200,6 @@ class gradingform_multigraders_instance extends gradingform_instance {
                 $message->fullmessageformat = FORMAT_HTML;
                 $message->fullmessagehtml = $fullmessagehtml;
                 $message->smallmessage = $smallmessage;
-
                 $message->contexturl = $contextUrl;
                 $message->contexturlname = $contexturlname;
                 $message->replyto = core_user::get_noreply_user();
@@ -1214,7 +1208,15 @@ class gradingform_multigraders_instance extends gradingform_instance {
                     'footer' => get_string('message_footer', 'gradingform_multigraders'))); // Extra content for specific processor
                 $message->set_additional_content('email', $content);
                 $message->courseid = $PAGE->cm->get_course()->id; // This is required in recent versions, use it from 3.2 on https://tracker.moodle.org/browse/MDL-47162
+/*
+                ob_start();
+                var_dump($message);
+                $this->log .= ob_get_contents();
+                ob_end_clean();*/
+
                 $messageid = message_send($message);
+
+                $this->log .= ' msgid '.$messageid;
             }
         }
     }

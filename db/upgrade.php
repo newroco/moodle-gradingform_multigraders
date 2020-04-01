@@ -123,11 +123,15 @@ function xmldb_gradingform_multigraders_upgrade($oldversion) {
     if ($oldversion < 2020033100) {
         $dbman = $DB->get_manager();
         $tableDefs = new xmldb_table('multigraders_definitions');
+
+        // This rename table includes a non necessary sequence rename which fails on upgrade
+        // $dbman->rename_table($tableDefs, 'gradingform_multigraders_def');
+        // do only first DDL statement
+        $arrSql = $dbman->generator->getRenameTableSQL($tableDefs, 'gradingform_multigraders_def');
+        $DB->execute($arrSql[0]);
+
         $tableGrades = new xmldb_table('multigraders_grades');
-
-        $dbman->rename_table($tableDefs, 'gradingform_multigraders_def');
         $dbman->rename_table($tableGrades, 'gradingform_multigraders_gra');
-
 
         upgrade_plugin_savepoint(true, 2020033100, 'gradingform', 'multigraders');
     }
