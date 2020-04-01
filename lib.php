@@ -28,6 +28,7 @@ require_once($CFG->dirroot.'/grade/grading/form/lib.php');
 require_once($CFG->libdir.'/mathslib.php');
 require_once($CFG->libdir . '/messagelib.php');
 require_once($CFG->dirroot.'/grade/lib.php');
+require_once($CFG->dirroot.'/message/lib.php');
 
 /**
  * This controller encapsulates the multi grading logic
@@ -1192,7 +1193,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
                 $message = new \core\message\message();
                 $message->component = 'gradingform_multigraders';
                 $message->name = 'secondgrading';
-                $message->notification = 0;
+                $message->notification = 1;
                 $message->userfrom = $USER;
                 $message->userto = $userID;
                 $message->subject = $subject;
@@ -1253,7 +1254,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
         $message = new \core\message\message();
         $message->component = 'gradingform_multigraders';
         $message->name = 'secondgrading';
-        $message->notification = 0;
+        $message->notification = 1;
         $message->userfrom = $USER;
         $message->userto = $firstGradeRecord->grader;
         $message->subject = $subject;
