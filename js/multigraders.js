@@ -183,6 +183,9 @@ M.gradingform_multigraders.updateGrade = function(element) {
             }
             let value  = this.get('value');
             let intVal = parseInt(this.get('text'),10);
+            if (isNaN(intVal)) {
+                intVal = parseInt(value,10);
+            }
             if(intVal <= grade){
                 if(Math.abs(prevIntGrade-grade) < (grade - intVal)){
                     gradeElements.val(prevGrade);
