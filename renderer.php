@@ -81,7 +81,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         $this->scaleid = null;
         $this->gradingDisabled = false;
 
-        if($options->criteria) {
+        if(isset($options->criteria)) {
             $output .= html_writer::tag('div',$options->criteria, array('class' => 'coursebox multigraders_criteria'));
         }
 
@@ -430,6 +430,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         }
 
         //outcomes
+        $outcomesDiv = '';
         if($this->outcomes) {
             $outcomesDiv = html_writer::tag('div', $this->display_outcomes($record, $mode), array('class' => 'grade-outcomes'));
         }
@@ -456,8 +457,8 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
             'value' => $record->grade,
             'data-formula' => $this->outcomesCalculationFormula,
             'title' => $this->outcomesCalculationFormula,
-            'data-grade-range-min' => $this->gradeRange->minGrade,
-            'data-grade-range-max' => $this->gradeRange->maxGrade,
+            'data-grade-range-min' => $this->gradeRange ? $this->gradeRange->minGrade : '',
+            'data-grade-range-max' => $this->gradeRange ? $this->gradeRange->maxGrade : '',
             'class' => 'grade');
         //in case we need a select box
         if($this->scaleid) {
