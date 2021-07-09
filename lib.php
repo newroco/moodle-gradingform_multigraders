@@ -569,14 +569,13 @@ class gradingform_multigraders_controller extends gradingform_controller {
 
 
     /**
-     * Returns a new instance of external_single_structure
-     *
-     * @return external_single_structure
+     * @return array An array containing 1 key/value pairs which hold the external_multiple_structure
      * @see gradingform_controller::get_external_definition_details()
      * @since Moodle 2.5
      */
     public static function get_external_definition_details() {
-        $definition_extradetails = new external_single_structure(
+        $grades_criteria = new external_multiple_structure(
+                            new external_single_structure(
                                   array(
                                       'secondary_graders_id_list'   => new external_value(PARAM_CHAR, '', VALUE_REQUIRED),
                                       'criteria'   => new external_value(PARAM_RAW, '', VALUE_REQUIRED),
@@ -584,8 +583,8 @@ class gradingform_multigraders_controller extends gradingform_controller {
                                       'show_intermediary_to_students'   => new external_value(PARAM_INT, 'if intermediary grades are shown to students', VALUE_REQUIRED),
                                       'auto_calculate_final_method'   => new external_value(PARAM_INT, 'method of calculating the final grade', VALUE_REQUIRED),
                                       )
-                                  );
-        return $definition_extradetails;
+                                  ));
+        return array('grades_criteria' => $grades_criteria);
     }
 
     /**
