@@ -381,10 +381,14 @@ class gradingform_multigraders_controller extends gradingform_controller {
         if(isset($this->definition->secondary_graders_id_list) &&
             $this->definition->secondary_graders_id_list != ''){
             //transform list of grader ids into name list
+
+            $mainuserfields = user_picture::fields();
+
             $dbUsers = get_users(true,'',true,null,'lastname ASC,firstname ASC',
-                $firstinitial='', $lastinitial='', $page=0, $recordsperpage=100, $fields='id,firstname,lastname',
+                $firstinitial='', $lastinitial='', $page=0, $recordsperpage=100, $fields=$mainuserfields,
                 $extraselect='id IN ('.$this->definition->secondary_graders_id_list.')');
             $secondaryGraders = '';
+
             foreach($dbUsers as $id => $oUser){
                 $secondaryGraders .= fullname($oUser).', ';
             }
