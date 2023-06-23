@@ -581,7 +581,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
         $grades_criteria = new external_multiple_structure(
                             new external_single_structure(
                                   array(
-                                      'secondary_graders_id_list'   => new external_value(PARAM_CHAR, '', VALUE_REQUIRED),
+                                      'secondary_graders_id_list'   => new external_value(PARAM_TEXT, '', VALUE_REQUIRED),
                                       'criteria'   => new external_value(PARAM_RAW, '', VALUE_REQUIRED),
                                       'blind_marking'   => new external_value(PARAM_INT, 'if blind grading is enabled', VALUE_REQUIRED),
                                       'show_intermediary_to_students'   => new external_value(PARAM_INT, 'if intermediary grades are shown to students', VALUE_REQUIRED),
