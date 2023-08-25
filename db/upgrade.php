@@ -135,6 +135,46 @@ function xmldb_gradingform_multigraders_upgrade($oldversion) {
 
         upgrade_plugin_savepoint(true, 2020033100, 'gradingform', 'multigraders');
     }
+    if($oldversion <2021070900){
+        $dbman=$DB->get_manager();
+        $table=new xmldb_table('gradingform_multigraders_def');
+        $field = new xmldb_field('secondary_graders_id_list', XMLDB_TYPE_CHAR, '100', null, null, null, '0', 'blind_marking');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+    
+        $field = new xmldb_field('blind_marking', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', 'secondary_graders_id_list');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+    
+        $field = new xmldb_field('show_intermediary_to_students', XMLDB_TYPE_INTEGER, '1', null, null, null, '1', 'blind_marking');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+    
+        $field = new xmldb_field('auto_calculate_final_method', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', 'show_intermediary_to_students');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+    
+        $table = new xmldb_table('gradingform_multigraders_gra');
+        $field = new xmldb_field('timestamp', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'type');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+    
+        $field = new xmldb_field('visible_to_students', XMLDB_TYPE_INTEGER, '1', null, null, null, '1', 'timestamp');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        $field = new xmldb_field('outcomes', XMLDB_TYPE_TEXT, null, null, null, null, null, 'visible_to_students');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_plugin_savepoint(true, 2021070900, 'gradingform', 'multigraders');
+    }
+    
 
     return true;
 }
