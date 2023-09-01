@@ -140,7 +140,7 @@ function xmldb_gradingform_multigraders_upgrade($oldversion) {
         $table=new xmldb_table('gradingform_multigraders_def');
         $field = new xmldb_field('secondary_graders_id_list', XMLDB_TYPE_CHAR, '100', null, null, null, '0', 'blind_marking');
         if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
+                       $dbman->add_field($table, $field);
         }
     
         $field = new xmldb_field('blind_marking', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', 'secondary_graders_id_list');
@@ -174,7 +174,7 @@ function xmldb_gradingform_multigraders_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2021070900, 'gradingform', 'multigraders');
     }
-    
+
 
     return true;
 }

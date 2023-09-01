@@ -21,14 +21,15 @@
  * @copyright   2018 Lucian Pricop <contact@lucianpricop.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
+use core_external\external_multiple_structure;
+use core_external\external_value;
+use core_external\external_single_structure;
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/grade/grading/form/lib.php');
-require_once($CFG->libdir.'/mathslib.php');
+require_once $CFG->libdir.'/mathslib.php';
 require_once($CFG->libdir . '/messagelib.php');
-require_once($CFG->dirroot.'/grade/lib.php');
-require_once($CFG->dirroot.'/message/lib.php');
+require_once $CFG->dirroot.'/grade/lib.php';
 
 /**
  * This controller encapsulates the multi grading logic
@@ -631,23 +632,23 @@ class gradingform_multigraders_controller extends gradingform_controller {
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class gradingform_multigraders_instance extends gradingform_instance {
-    /** @var array of errors per <grader><record type> values */
+/** @var array of errors per <grader><record type> values */
     public $validationErrors;
-    /** @var array of options defined in the gradingform definition */
+/** @var array of options defined in the gradingform definition */
     public $options;
-    /** @var stdClass with minRange of maxRange of the grading range */
+/** @var stdClass with minRange of maxRange of the grading range */
     protected $gradeRange;
-    /** @var array of grades for this instance */
+/** @var array of grades for this instance */
     protected $instanceGrades;
     /** @var string debugging log */
     protected $log;
 
-    /** Intermediate grade type - e.g not the final one */
+/** Intermediate grade type - e.g not the final one */
     const GRADE_TYPE_INTERMEDIARY = 0;
-    /** Final grade */
+/** Final grade */
     const GRADE_TYPE_FINAL = 1;
 
-    /**
+/**
      * Creates a gradingform_multigraders instance
      *
      * @param gradingform_controller $controller
@@ -783,16 +784,16 @@ class gradingform_multigraders_instance extends gradingform_instance {
         $elementvalue['grade'] = floatval($elementvalue['grade']);
         if($this->getGradeRange()) {
             if ($this->getGradeRange()->minGrade && $elementvalue['grade'] < $this->getGradeRange()->minGrade
-                ||
-                $this->getGradeRange()->maxGrade && $elementvalue['grade'] > $this->getGradeRange()->maxGrade) {
-                ob_start();
+            ||
+            $this->getGradeRange()->maxGrade && $elementvalue['grade'] > $this->getGradeRange()->maxGrade) {
+            ob_start();
                 var_dump($this->getGradeRange());
                 $echo = ob_get_contents();
                 ob_end_clean();
                 $this->validationErrors[$elementvalue['grader'] . $elementvalue['type']] = $elementvalue['grade'] . ' ' . get_string('err_gradeoutofbounds', 'gradingform_multigraders') . ' ' . $echo;
-                return false;
-            }
+            return false;
         }
+}
 
         return true;
     }
@@ -838,8 +839,8 @@ class gradingform_multigraders_instance extends gradingform_instance {
 
         //check first if an admin wants to delete everything for this grade
         //check if multigraders_delete_all parameter was sent
-        if(isset($data['multigraders_delete_all']) && $data['multigraders_delete_all']=='true') {
-            //check if user is admin
+                if(isset($data['multigraders_delete_all']) && $data['multigraders_delete_all']=='true') {
+                        //check if user is admin
             $systemcontext = context_system::instance();
             if(has_capability('moodle/site:config', $systemcontext)) {
                 $this->log .= 'update() moodle/site:config is true. ';
@@ -851,10 +852,10 @@ class gradingform_multigraders_instance extends gradingform_instance {
                 $newdata->rawgrade = -1;
                 $DB->update_record('grading_instances', $newdata);
             }
-            $this->get_instance_grades(true);
+                        $this->get_instance_grades(true);
             return;
         }
-
+        
         foreach ($currentFormData['grades'] as $grader=> $record) {
             if(!$firstGradeRecord){
                 $firstGradeRecord = $record;
@@ -940,7 +941,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
         if((!$currentRecord || !$currentRecord->require_second_grader || $currentRecord->type != $gradeType) &&
             $gradeType != gradingform_multigraders_instance::GRADE_TYPE_FINAL &&
             $data['require_second_grader']){
-            $this->log .= ' in for notification ';
+$this->log .= ' in for notification ';
             $this->send_second_graders_notification($gradingFinal,$firstGradeRecord,$data['itemid']);
         }elseif($firstGradeRecord->grader != $USER->id){
             $this->send_initial_grader_notification($firstGradeRecord,$data['itemid']);
@@ -1116,7 +1117,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
         $this->options->itemID = $this->getItemID();
         $this->options->userID = self::get_userID_for_itemID($this->options->itemID);
 
-         /* if($USER->id == 634 || $USER->id == 652){
+/* if($USER->id == 634 || $USER->id == 652){
             /*$gradinginfo = grade_get_grades($PAGE->cm->get_course()->id,
                  'mod',
                  'assign',
@@ -1133,8 +1134,8 @@ class gradingform_multigraders_instance extends gradingform_instance {
             $echo .= highlight_string("<?php\n\$vars =\n" . var_export(array_keys($vars), true) . ";\n?>");
 
             ob_start();
-            var_dump($this->log);
-            $echo = ob_get_contents();
+                        var_dump($this->log);
+                        $echo = ob_get_contents();
             ob_end_clean();
             $html .= html_writer::tag('div', $echo, array('class' => 'dump'));
         }*/
@@ -1143,7 +1144,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
         return $html;
     }
 
-    /**
+/**
      * Returns the User ID of a grading item ID
      * @param int $itemID
      * @return int|null

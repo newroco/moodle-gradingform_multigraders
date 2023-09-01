@@ -62,7 +62,7 @@ class gradingform_multigraders_editform extends moodleform {
         $manager = get_grading_manager($areaid);
 
         $context = $manager->get_context();
-        $graders = get_enrolled_users($context, 'mod/assignment:grade', 0, 'u.*', 'u.lastname ASC, u.firstname ASC');
+        $graders = get_enrolled_users($context, 'mod/assign:grade', 0, 'u.*', 'u.lastname ASC, u.firstname ASC');
         foreach ($graders as $grader) {
             $graders[$grader->id] = fullname($grader);
         }
