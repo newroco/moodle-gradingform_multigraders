@@ -120,6 +120,7 @@ M.gradingform_multigraders.init = function(Y, options) {
                     Y.one('.multigraders_grade input.final_grade_check').set('checked',false);
                 }else{
                     Y.all('input[name="sendstudentnotifications"]').set('checked',true).removeAttribute('disabled');
+                    Y.all('.multigraders_grade button[name="advancedgrading[final_grade_publish]"]').removeAttribute('disabled');
                 }
             });
         }else{

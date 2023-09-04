@@ -256,7 +256,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
         if (empty($this->moduleinstance)) { // Only set if empty.
             $modulename = $this->get_component();
             $context = $this->get_context();
-            if (strpos($modulename, 'mod_') === 0) {
+            if (stripos($modulename, 'mod_') === 0) {
                 $dbman = $DB->get_manager();
                 $modulename = substr($modulename, 4);
                 if ($dbman->table_exists($modulename)) {
@@ -1176,7 +1176,7 @@ $this->log .= ' in for notification ';
         $userID = self::get_userID_for_itemID($itemID);
         //$userID is now the ID of the user graded
         $gradeeURL = self::get_user_url($userID);
-
+        
         $grader = self::get_user_url($USER->id);
         $contextUrl = new moodle_url('/mod/assign/view.php', array('id' => $PAGE->cm->id,'action'=>'grader','userid' => $userID));
         $contexturlname = get_string('message_assign_name', 'gradingform_multigraders','<a href="'.$contextUrl.'">'.$PAGE->cm->name.'</a><br/>');
@@ -1279,7 +1279,7 @@ $this->log .= ' in for notification ';
 
         $message->contexturl = $contextUrl;
         $message->contexturlname = $contexturlname;
-        $message->replyto = core_user::get_noreply_user();
+        $message->replyto =core_user::get_noreply_user()->id;
         $content = array('*' => array(
             'header' => get_string('message_header', 'gradingform_multigraders'),
             'footer' => get_string('message_footer', 'gradingform_multigraders'))); // Extra content for specific processor
