@@ -1217,7 +1217,7 @@ $this->log .= ' in for notification ';
                 $message->smallmessage = $smallmessage;
                 $message->contexturl = $contextUrl;
                 $message->contexturlname = $contexturlname;
-                $message->replyto = core_user::get_noreply_user();
+                $message->replyto = core_user::get_noreply_user()->id;
                 $content = array('*' => array(
                     'header' => get_string('message_header', 'gradingform_multigraders'),
                     'footer' => get_string('message_footer', 'gradingform_multigraders'))); // Extra content for specific processor
