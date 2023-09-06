@@ -83,6 +83,7 @@ $string['finalgradefinished_noaccess'] = '{$a} completed grading this item. You 
 $string['useralreadygradedthisitem'] = 'You already graded this item, someone else needs to decide the final grade and feedback comments.';
 $string['useralreadygradedthisitemfinal'] = 'Only {$a} may change the final grade and notes.';
 $string['graderdetails_display'] = 'Graded by {$a}';
+$string['now_grading'] = 'Now grading: {$a}';
 $string['instancedetails_display'] = '{$a} grades added.';
 $string['messageprovider:secondgrading'] = 'Notifications of assignments that require second grading.';
 $string['message_subject'] = 'Second grading required for {$a}';

@@ -68,7 +68,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
      * @return string
      */
     public function display_form($mode, $options, $values = null, $elementName = 'multigraders', $validationErrors = Array(), $gradeRange = null) {
-        global $USER,$CFG,$PAGE;
+        global $USER,$CFG,$PAGE,$DB;
         $output = '';
         $this->validationErrors = $validationErrors;
         $this->gradeRange = $gradeRange;
@@ -80,12 +80,18 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         $this->options = $options;
         $this->scaleid = null;
         $this->gradingDisabled = false;
+       
+                if(isset($options->criteria)) {
+            $id_user=$options->userID;
+            $user = $DB->get_record('user', array('id' => $id_user));
+            $user_name= fullname($user);
 
-        if(isset($options->criteria)) {
+            $url_grading = new moodle_url('/mod/assign/view.php',  array('id' => $PAGE->cm->id,'action'=>'grader','userid' => $id_user));
+            $html = get_string('now_grading','gradingform_multigraders','<a href="'.$url_grading.'">'. $user_name.'</a>');
+        
+            $output .= html_writer::tag('h4',$html,array('class' => 'nowgrading'));
             $output .= html_writer::tag('div',$options->criteria, array('class' => 'coursebox multigraders_criteria'));
         }
-
-
         $gradinginfo = grade_get_grades($PAGE->cm->get_course()->id,
             'mod',
             'assign',
