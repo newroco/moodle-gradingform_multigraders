@@ -55,7 +55,7 @@ function xmldb_gradingform_multigraders_upgrade($oldversion) {
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-
+      
         $field = new xmldb_field('auto_calculate_final_method', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', 'show_intermediary_to_students');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
@@ -152,7 +152,7 @@ function xmldb_gradingform_multigraders_upgrade($oldversion) {
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-    
+
         $field = new xmldb_field('auto_calculate_final_method', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', 'show_intermediary_to_students');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
@@ -173,6 +173,17 @@ function xmldb_gradingform_multigraders_upgrade($oldversion) {
             $dbman->add_field($table, $field);
         }
         upgrade_plugin_savepoint(true, 2021070900, 'gradingform', 'multigraders');
+    }
+    if($oldversion <2023090723){
+        $dbman=$DB->get_manager();
+        $table=new xmldb_table('gradingform_multigraders_def');
+    
+        $field = new xmldb_field('show_notify_student_box', XMLDB_TYPE_INTEGER, '1', null, null, null, '1', 'auto_calculate_final_method');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+           
+        upgrade_plugin_savepoint(true, 2023090723, 'gradingform', 'multigraders');
     }
 
 

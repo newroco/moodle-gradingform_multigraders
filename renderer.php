@@ -542,6 +542,23 @@ $outcomesDiv = '';
         }else{
             $showToStudents = '';
         }
+        if($this->options->show_notify_student_box){
+            $atts_notify = array(
+                'id' => 'input_notify_student',
+                'name' => $this->elementName . '[notify_student]',
+                'type' => 'hidden',
+                'value' => 'true');              
+                $input_not= html_writer::empty_tag('input',array_merge( $atts_notify));
+                $inputNotify= html_writer::tag('div', $input_not, array('class'=> 'int_notify_student'));
+            }else{
+                $atts_notify = array(
+                    'id' => 'input_notify_student',
+                    'name' => $this->elementName . '[notify_student]',
+                    'type' => 'hidden',
+                    'value' => 'false');              
+                    $input_not= html_writer::empty_tag('input',array_merge( $atts_notify));
+                    $inputNotify= html_writer::tag('div', $input_not, array('class'=> 'int_notify_student'));
+            }
         //final grade
         $finalGrade = '';
         if(isset($record->gradingFinal) && $record->gradingFinal) {
@@ -595,7 +612,7 @@ $outcomesDiv = '';
         if($error){
             $errorDiv = html_writer::tag('div', $error, array('class' => 'gradingform_multigraders-error'));
         }
-        return html_writer::tag('div', $outcomesDiv . $gradeWrapDiv. $feedbackDiv . $showToStudents . $requireSecondGrader. $finalGrade. $errorDiv, array('class' => 'coursebox multigraders_grade '.$additionalClass));
+        return html_writer::tag('div', $outcomesDiv . $gradeWrapDiv. $feedbackDiv . $showToStudents . $inputNotify. $requireSecondGrader. $finalGrade. $errorDiv, array('class' => 'coursebox multigraders_grade '.$additionalClass));
     }
 
 /**
@@ -715,7 +732,7 @@ $outcomesDiv = '';
         $definition = $instance->get_controller()->get_definition();
         $options = new stdClass();
         if($definition) {
-            foreach (array('secondary_graders_id_list','criteria','blind_marking','show_intermediary_to_students','auto_calculate_final_method') as $key) {
+            foreach (array('secondary_graders_id_list','criteria','blind_marking','show_intermediary_to_students','auto_calculate_final_method','show_notify_student_box') as $key) {
                 if (isset($definition->$key)) {
                     $options->$key = $definition->$key;
                 }

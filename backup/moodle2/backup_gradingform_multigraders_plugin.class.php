@@ -48,7 +48,8 @@ class backup_gradingform_multigraders_plugin extends backup_gradingform_plugin {
             'criteria',
             'blind_marking',
             'show_intermediary_to_students',
-            'auto_calculate_final_method'));
+            'auto_calculate_final_method',
+            'show_notify_student_box'));
 
         // Connect our visible container to the parent.
         $plugin->add_child($pluginwrapper);

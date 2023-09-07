@@ -98,6 +98,9 @@ class gradingform_multigraders_editform extends moodleform {
         $form->addHelpButton('show_intermediary_to_students', 'show_intermediary_to_students', 'gradingform_multigraders');
         $form->setDefault('show_intermediary_to_students', 1);
 
+        $form->addElement('checkbox', 'show_notify_student_box', get_string('show_notify_student_box', 'gradingform_multigraders'));
+        $form->addHelpButton('show_notify_student_box', 'show_notify_student_box', 'gradingform_multigraders');
+        $form->setDefault('show_notify_student_box', 1);
         // Can graders change their grade and feedback after another graded?
         /*$form->addElement('checkbox', 'previous_graders_cant_change', get_string('previous_graders_cant_change', 'gradingform_multigraders'));
         $form->addHelpButton('previous_graders_cant_change','previous_graders_cant_change', 'gradingform_multigraders');

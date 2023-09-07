@@ -106,6 +106,15 @@ M.gradingform_multigraders.init = function(Y, options) {
     Y.all('.multigraders_grade .outcome select[data-id]').on('change', function(event) {
         M.gradingform_multigraders.updateGrade(event.currentTarget);
     });
+
+   if(jQuery('.int_notify_student input#input_notify_student').val() == 'false'){
+        Y.all('.flex-grow-1.align-self-center label').setStyle('display','none');
+        Y.all('.flex-grow-1.align-self-center .btn.btn-link.p-0').setStyle('display','none');
+   }else{
+        Y.all('.flex-grow-1.align-self-center label').setStyle('display','contents');
+        Y.all('.flex-grow-1.align-self-center .btn.btn-link.p-0').setStyle('display','contents');
+    }
+           
     //handle change of require_second_grader check box
     Y.all('.multigraders_grade input.require_second_grader').each(function(node,index){
         if(index == M.gradingform_multigraders.number_of_grades -1){
