@@ -111,8 +111,8 @@ M.gradingform_multigraders.init = function(Y, options) {
         Y.all('.flex-grow-1.align-self-center label').setStyle('display','none');
         Y.all('.flex-grow-1.align-self-center .btn.btn-link.p-0').setStyle('display','none');
    }else{
-        Y.all('.flex-grow-1.align-self-center label').setStyle('display','contents');
-        Y.all('.flex-grow-1.align-self-center .btn.btn-link.p-0').setStyle('display','contents');
+        Y.all('.flex-grow-1.align-self-center label').setStyle('display','initial');
+        Y.all('.flex-grow-1.align-self-center .btn.btn-link.p-0').setStyle('display','initial');
     }
            
     //handle change of require_second_grader check box
