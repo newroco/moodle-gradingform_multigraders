@@ -168,7 +168,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
             if (!isset($newdefinition->blind_marking)) {
                 $data->blind_marking = 0;
                 $data->show_intermediary_to_students = 1;
-                $data ->show_notify_student_box =1;               
+                $data ->show_notify_student_box = 0;               
                 $data->auto_calculate_final_method = 0;
                 $data->secondary_graders_id_list = Array();
                 $data->criteria = '';
@@ -241,7 +241,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
             //Populate with defaults
             $this->definition->blind_marking = 0;
             $this->definition->show_intermediary_to_students = 1;
-            $this->definition->show_notify_student_box = 1;
+            $this->definition->show_notify_student_box = 0;
             $this->definition->auto_calculate_final_method = 0;
             $this->definition->secondary_graders_id_list = Array();
             $this->definition->empty = true;

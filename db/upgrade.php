@@ -184,6 +184,14 @@ function xmldb_gradingform_multigraders_upgrade($oldversion) {
         }
            
         upgrade_plugin_savepoint(true, 2023090723, 'gradingform', 'multigraders');
+    } if($oldversion <2023091110){
+        $dbman=$DB->get_manager();
+        $table=new xmldb_table('gradingform_multigraders_def');
+          
+        $field = new xmldb_field('show_notify_student_box', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', 'auto_calculate_final_method');
+        $dbman->change_field_default($table, $field);
+           
+        upgrade_plugin_savepoint(true, 2023091110, 'gradingform', 'multigraders');
     }
 
 
