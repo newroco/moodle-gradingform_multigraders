@@ -168,7 +168,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
             if (!isset($newdefinition->blind_marking)) {
                 $data->blind_marking = 0;
                 $data->show_intermediary_to_students = 1;
-                $data ->show_notify_student_box = 0;               
+                $data ->show_notify_student_box = 0;
                 $data->auto_calculate_final_method = 0;
                 $data->secondary_graders_id_list = Array();
                 $data->criteria = '';
@@ -177,7 +177,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
                 $data->show_intermediary_to_students = $newdefinition->show_intermediary_to_students;
                 $data->show_notify_student_box = $newdefinition->show_notify_student_box;
                 $data->auto_calculate_final_method = $newdefinition->auto_calculate_final_method;
-                $data->secondary_graders_id_list = $newdefinition->secondary_graders_id_list;               
+                $data->secondary_graders_id_list = $newdefinition->secondary_graders_id_list;
                 $data->criteria = $newdefinition->criteria['text'];
             }
             if (isset($this->definition->empty)) {
@@ -199,12 +199,12 @@ class gradingform_multigraders_controller extends gradingform_controller {
     public function mark_for_regrade() {
         global $DB;
         // if ($this->has_active_instances()) {
-            $conditions = array('definitionid'  => $this->definition->id,
-                        'status'  => gradingform_instance::INSTANCE_STATUS_ACTIVE);
-            $DB->set_field('grading_instances', 'status', gradingform_instance::INSTANCE_STATUS_NEEDUPDATE, $conditions);
+        $conditions = array('definitionid'  => $this->definition->id,
+            'status'  => gradingform_instance::INSTANCE_STATUS_ACTIVE);
+        $DB->set_field('grading_instances', 'status', gradingform_instance::INSTANCE_STATUS_NEEDUPDATE, $conditions);
 
-            // change the final grade type from final to intermediary
-            /*$results = $DB->get_records('grading_instances',
+        // change the final grade type from final to intermediary
+        /*$results = $DB->get_records('grading_instances',
                 array('definitionid'  => $this->definition->id),null,'id,itemid');
             $arrItemIDs = Array();
             foreach ($results as $record) {
@@ -510,8 +510,8 @@ class gradingform_multigraders_controller extends gradingform_controller {
     public function get_or_create_instance($instanceid, $raterid, $itemid) {
         global $DB;
         if ($instanceid &&
-                $instance = $DB->get_record('grading_instances',
-                    array('id'  => $instanceid, 'raterid' => $raterid, 'itemid' => $itemid), '*', IGNORE_MISSING)) {
+            $instance = $DB->get_record('grading_instances',
+                array('id'  => $instanceid, 'raterid' => $raterid, 'itemid' => $itemid), '*', IGNORE_MISSING)) {
             return $this->get_instance($instance);
         }
         if ($itemid && $raterid) {
@@ -520,7 +520,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
                 $record = reset($rs);
                 $currentinstance = $this->get_current_instance($raterid, $itemid);
                 if ($record->status == gradingform_multigraders_instance::INSTANCE_STATUS_INCOMPLETE &&
-                        (!$currentinstance || $record->timemodified > $currentinstance->get_data('timemodified'))) {
+                    (!$currentinstance || $record->timemodified > $currentinstance->get_data('timemodified'))) {
                     $record->isrestored = true;
                     return $this->get_instance($record);
                 }
@@ -585,15 +585,15 @@ class gradingform_multigraders_controller extends gradingform_controller {
      */
     public static function get_external_definition_details() {
         $grades_criteria = new external_multiple_structure(
-                            new external_single_structure(
-                                  array(
-                                      'secondary_graders_id_list'   => new external_value(PARAM_TEXT, '', VALUE_REQUIRED),
-                                      'criteria'   => new external_value(PARAM_RAW, '', VALUE_REQUIRED),
-                                      'blind_marking'   => new external_value(PARAM_INT, 'if blind grading is enabled', VALUE_REQUIRED),
-                                      'show_intermediary_to_students'   => new external_value(PARAM_INT, 'if intermediary grades are shown to students', VALUE_REQUIRED),
-                                      'auto_calculate_final_method'   => new external_value(PARAM_INT, 'method of calculating the final grade', VALUE_REQUIRED),
-                                      )
-                                  ));
+            new external_single_structure(
+                array(
+                    'secondary_graders_id_list'   => new external_value(PARAM_TEXT, '', VALUE_REQUIRED),
+                    'criteria'   => new external_value(PARAM_RAW, '', VALUE_REQUIRED),
+                    'blind_marking'   => new external_value(PARAM_INT, 'if blind grading is enabled', VALUE_REQUIRED),
+                    'show_intermediary_to_students'   => new external_value(PARAM_INT, 'if intermediary grades are shown to students', VALUE_REQUIRED),
+                    'auto_calculate_final_method'   => new external_value(PARAM_INT, 'method of calculating the final grade', VALUE_REQUIRED),
+                )
+            ));
         return array('grades_criteria' => $grades_criteria);
     }
 
@@ -637,23 +637,23 @@ class gradingform_multigraders_controller extends gradingform_controller {
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class gradingform_multigraders_instance extends gradingform_instance {
-/** @var array of errors per <grader><record type> values */
+    /** @var array of errors per <grader><record type> values */
     public $validationErrors;
-/** @var array of options defined in the gradingform definition */
+    /** @var array of options defined in the gradingform definition */
     public $options;
-/** @var stdClass with minRange of maxRange of the grading range */
+    /** @var stdClass with minRange of maxRange of the grading range */
     protected $gradeRange;
-/** @var array of grades for this instance */
+    /** @var array of grades for this instance */
     protected $instanceGrades;
     /** @var string debugging log */
     protected $log;
 
-/** Intermediate grade type - e.g not the final one */
+    /** Intermediate grade type - e.g not the final one */
     const GRADE_TYPE_INTERMEDIARY = 0;
-/** Final grade */
+    /** Final grade */
     const GRADE_TYPE_FINAL = 1;
 
-/**
+    /**
      * Creates a gradingform_multigraders instance
      *
      * @param gradingform_controller $controller
@@ -789,16 +789,16 @@ class gradingform_multigraders_instance extends gradingform_instance {
         $elementvalue['grade'] = floatval($elementvalue['grade']);
         if($this->getGradeRange()) {
             if ($this->getGradeRange()->minGrade && $elementvalue['grade'] < $this->getGradeRange()->minGrade
-            ||
-            $this->getGradeRange()->maxGrade && $elementvalue['grade'] > $this->getGradeRange()->maxGrade) {
-            ob_start();
+                ||
+                $this->getGradeRange()->maxGrade && $elementvalue['grade'] > $this->getGradeRange()->maxGrade) {
+                ob_start();
                 var_dump($this->getGradeRange());
                 $echo = ob_get_contents();
                 ob_end_clean();
                 $this->validationErrors[$elementvalue['grader'] . $elementvalue['type']] = $elementvalue['grade'] . ' ' . get_string('err_gradeoutofbounds', 'gradingform_multigraders') . ' ' . $echo;
-            return false;
+                return false;
+            }
         }
-}
 
         return true;
     }
@@ -844,8 +844,8 @@ class gradingform_multigraders_instance extends gradingform_instance {
 
         //check first if an admin wants to delete everything for this grade
         //check if multigraders_delete_all parameter was sent
-                if(isset($data['multigraders_delete_all']) && $data['multigraders_delete_all']=='true') {
-                        //check if user is admin
+        if(isset($data['multigraders_delete_all']) && $data['multigraders_delete_all']=='true') {
+            //check if user is admin
             $systemcontext = context_system::instance();
             if(has_capability('moodle/site:config', $systemcontext)) {
                 $this->log .= 'update() moodle/site:config is true. ';
@@ -857,10 +857,10 @@ class gradingform_multigraders_instance extends gradingform_instance {
                 $newdata->rawgrade = -1;
                 $DB->update_record('grading_instances', $newdata);
             }
-                        $this->get_instance_grades(true);
+            $this->get_instance_grades(true);
             return;
         }
-        
+
         foreach ($currentFormData['grades'] as $grader=> $record) {
             if(!$firstGradeRecord){
                 $firstGradeRecord = $record;
@@ -946,7 +946,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
         if((!$currentRecord || !$currentRecord->require_second_grader || $currentRecord->type != $gradeType) &&
             $gradeType != gradingform_multigraders_instance::GRADE_TYPE_FINAL &&
             $data['require_second_grader']){
-$this->log .= ' in for notification ';
+            $this->log .= ' in for notification ';
             $this->send_second_graders_notification($gradingFinal,$firstGradeRecord,$data['itemid']);
         }elseif($firstGradeRecord->grader != $USER->id){
             $this->send_initial_grader_notification($firstGradeRecord,$data['itemid']);
@@ -1054,7 +1054,7 @@ $this->log .= ' in for notification ';
     /**
      * Returns html for form element of type 'grading'.
      *
-     * @param moodle_page $page
+     * @param moodle_page $page     
      * @param MoodleQuickForm_grading $gradingformelement
      * @return string
      */
@@ -1066,24 +1066,29 @@ $this->log .= ' in for notification ';
 
         $mode = gradingform_multigraders_controller::DISPLAY_VIEW;
         if (has_capability('moodle/grade:manage', $page->context)) {
-            $mode = gradingform_multigraders_controller::DISPLAY_EVAL_FULL;
+        $mode = gradingform_multigraders_controller::DISPLAY_EVAL_FULL;
         }elseif (has_capability('moodle/grade:edit', $page->context)) {
-            $mode = gradingform_multigraders_controller::DISPLAY_EVAL;
+        $mode = gradingform_multigraders_controller::DISPLAY_EVAL;
         }elseif (has_capability('moodle/grade:viewall', $page->context)) {
-            $mode = gradingform_multigraders_controller::DISPLAY_REVIEW;
+        $mode = gradingform_multigraders_controller::DISPLAY_REVIEW;
         }elseif (has_capability('moodle/grade:view', $page->context)) {
-            $mode = gradingform_multigraders_controller::DISPLAY_VIEW;
+        $mode = gradingform_multigraders_controller::DISPLAY_VIEW;
         }
         if ($gradingformelement->_flagFrozen && $gradingformelement->_persistantFreeze && has_capability('moodle/grade:edit', $page->context)) {
-            $mode = gradingform_multigraders_controller::DISPLAY_EVAL_FROZEN;
+        $mode = gradingform_multigraders_controller::DISPLAY_EVAL_FROZEN;
         }
 
 
         $html = '';
+        $form = new MoodleQuickForm('gradeform2', 'post', null, '', null, null);
 
-        if($this->options->blind_marking){
-            $html .= html_writer::tag('div', get_string('blind_marking_explained', 'gradingform_multigraders'),
-                array('class' => 'gradingform_multigraders-notice', 'role' => 'alert'));
+        if ($this->options->blind_marking) {
+           /*  $html .= html_writer::tag(
+                'div',
+                get_string('blind_marking_explained', 'gradingform_multigraders'),
+                array('class' => 'gradingform_multigraders-notice', 'role' => 'alert')
+            ); */
+            $form->addElement('html',"<div class='gradingform_multigraders-notice'>". get_string('blind_marking_explained', 'gradingform_multigraders').'</div>');
         }
         $values = $this->get_instance_grades();
         $value = $gradingformelement->getValue();
@@ -1099,8 +1104,10 @@ $this->log .= ' in for notification ';
                     $values['grades'][$grader]->outcomes =  (object)$value['outcome'];
                 }
             }
-            if($err = $this->validate_grading_element($value)) {
-                $html .= html_writer::tag('div', $err, array('class' => 'gradingform_multigraders-error'));
+            if ($err = $this->validate_grading_element($value)) {
+                // $html .= html_writer::tag('div', $err, array('class' => 'gradingform_multigraders-error'));
+                $form->addElement('html',"<div class='gradingform_multigraders-error'>".$err."</div>");
+
             }
         }
 
@@ -1122,7 +1129,7 @@ $this->log .= ' in for notification ';
         $this->options->itemID = $this->getItemID();
         $this->options->userID = self::get_userID_for_itemID($this->options->itemID);
 
-/* if($USER->id == 634 || $USER->id == 652){
+        /* if($USER->id == 634 || $USER->id == 652){
             /*$gradinginfo = grade_get_grades($PAGE->cm->get_course()->id,
                  'mod',
                  'assign',
@@ -1145,11 +1152,11 @@ $this->log .= ' in for notification ';
             $html .= html_writer::tag('div', $echo, array('class' => 'dump'));
         }*/
 
-        $html .= $this->get_controller()->get_renderer($page)->display_form( $mode,$this->options, $values,  $gradingformelement->getName(),$this->validationErrors,$this->getGradeRange() );
-        return $html;
+$html .= $this->get_controller()->get_renderer($page)->display_form( $mode,$this->options, $values,  $gradingformelement->getName(),$this->validationErrors,$this->getGradeRange() );
+       return $html;
     }
 
-/**
+    /**
      * Returns the User ID of a grading item ID
      * @param int $itemID
      * @return int|null
@@ -1181,7 +1188,7 @@ $this->log .= ' in for notification ';
         $userID = self::get_userID_for_itemID($itemID);
         //$userID is now the ID of the user graded
         $gradeeURL = self::get_user_url($userID);
-        
+
         $grader = self::get_user_url($USER->id);
         $contextUrl = new moodle_url('/mod/assign/view.php', array('id' => $PAGE->cm->id,'action'=>'grader','userid' => $userID));
         $contexturlname = get_string('message_assign_name', 'gradingform_multigraders','<a href="'.$contextUrl.'">'.$PAGE->cm->name.'</a><br/>');
@@ -1228,7 +1235,7 @@ $this->log .= ' in for notification ';
                     'footer' => get_string('message_footer', 'gradingform_multigraders'))); // Extra content for specific processor
                 $message->set_additional_content('email', $content);
                 $message->courseid = $PAGE->cm->get_course()->id; // This is required in recent versions, use it from 3.2 on https://tracker.moodle.org/browse/MDL-47162
-/*
+                /*
                 ob_start();
                 var_dump($message);
                 $this->log .= ob_get_contents();

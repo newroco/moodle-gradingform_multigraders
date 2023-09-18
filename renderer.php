@@ -23,6 +23,7 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
+require_once($CFG->dirroot .'/lib/formslib.php');
 
 /**
  * Grading method plugin renderer
@@ -32,15 +33,15 @@ defined('MOODLE_INTERNAL') || die();
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class gradingform_multigraders_renderer extends plugin_renderer_base {
-/** @var stdClass with minRange of maxRange of the grading range */
+    /** @var stdClass with minRange of maxRange of the grading range */
     public $gradeRange;
-/** @var array of errors per <grader><record type> values */
+    /** @var array of errors per <grader><record type> values */
     public $validationErrors;
-/** @var string the name of the form element (in editor mode) or the prefix for div ids (in view mode) */
+    /** @var string the name of the form element (in editor mode) or the prefix for div ids (in view mode) */
     public $elementName;
-/** @var float stores the calculation of the next grade based on the previous */
+    /** @var float stores the calculation of the next grade based on the previous */
     protected $defaultNextGrade;
-/** @var stdClass stores the calculations of the next outcomes base don the previous */
+    /** @var stdClass stores the calculations of the next outcomes base don the previous */
     protected $defaultNextOutcomes;
     /** @var array of outcomes */
     protected $outcomes;
@@ -52,7 +53,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
     protected $gradingDisabled;
     /** @var string the calculation formula for outcomes */
     protected $outcomesCalculationFormula;
-/** @var stdClass with minRange of maxRange of the value range for outcomes */
+    /** @var stdClass with minRange of maxRange of the value range for outcomes */
     protected $outcomesValueRange;
 
     /**
@@ -63,11 +64,11 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
      * @param object $options
      * @param array $values evaluation result
      * @param string $elementName the name of the form element (in editor mode) or the prefix for div ids (in view mode)
-* @param array $validationErrors array of errors per <grader><record type> values
+     * @param array $validationErrors array of errors per <grader><record type> values
      * @param stdClass $gradeRange with minRange of maxRange of the grading range
      * @return string
      */
-    public function display_form($mode, $options, $values = null, $elementName = 'multigraders', $validationErrors = Array(), $gradeRange = null) {
+    public function display_form($form,$mode, $options, $values = null, $elementName = 'multigraders', $validationErrors = Array(), $gradeRange = null) {
         global $USER,$CFG,$PAGE,$DB;
         $output = '';
         $this->validationErrors = $validationErrors;
@@ -80,17 +81,19 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         $this->options = $options;
         $this->scaleid = null;
         $this->gradingDisabled = false;
-       
-                if(isset($options->criteria)) {
+
+        if(isset($options->criteria)) {
             $id_user=$options->userID;
             $user = $DB->get_record('user', array('id' => $id_user));
             $user_name= fullname($user);
 
             $url_grading = new moodle_url('/mod/assign/view.php',  array('id' => $PAGE->cm->id,'action'=>'grader','userid' => $id_user));
             $html = get_string('now_grading','gradingform_multigraders','<a href="'.$url_grading.'">'. $user_name.'</a>');
-        
-            $output .= html_writer::tag('h4',$html,array('class' => 'nowgrading'));
-            $output .= html_writer::tag('div',$options->criteria, array('class' => 'coursebox multigraders_criteria'));
+
+/*             $output .= html_writer::tag('h4',$html,array('class' => 'nowgrading'));
+            $output .= html_writer::tag('div',$options->criteria, array('class' => 'coursebox multigraders_criteria')); */
+
+            $form->addElement('html', "<h4 class='nowgrading'>".$html."</h4>");
         }
         $gradinginfo = grade_get_grades($PAGE->cm->get_course()->id,
             'mod',
@@ -104,7 +107,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                 $this->scaleid = null;
             }
             $this->gradingDisabled = $gradinginfo->items[0]->grades[$options->userID]->locked ||
-                                $gradinginfo->items[0]->grades[$options->userID]->overridden;
+                $gradinginfo->items[0]->grades[$options->userID]->overridden;
         }
 
         //obtain the grade calculation formula from outcomes if available
@@ -243,8 +246,8 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
 
         //alter $allowFinalGradeEdit depending on current user relation to grading this item
         if($mode == gradingform_multigraders_controller::DISPLAY_VIEW ||
-           $mode == gradingform_multigraders_controller::DISPLAY_REVIEW ||
-           $mode == gradingform_multigraders_controller::DISPLAY_EVAL_FROZEN){
+            $mode == gradingform_multigraders_controller::DISPLAY_REVIEW ||
+            $mode == gradingform_multigraders_controller::DISPLAY_EVAL_FROZEN){
             $allowFinalGradeEdit = false;
             $userIsAllowedToGrade = false;
             if($firstGradeRecord === null){
@@ -252,18 +255,18 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
             }
         }
         if(($mode == gradingform_multigraders_controller::DISPLAY_EVAL_FULL ||
-            $mode == gradingform_multigraders_controller::DISPLAY_EVAL) && //current user is an ADMIN or a teacher
+                $mode == gradingform_multigraders_controller::DISPLAY_EVAL) && //current user is an ADMIN or a teacher
             $currentRecord !== null &&                                      //that already graded this item
             $firstGradeRecord !== $currentRecord){                          //but the grade they gave was not the final one
             $allowFinalGradeEdit = false;
             if($firstGradeRecord) {//final grade was added
                 $finalGradeMessage = html_writer::tag('div', get_string('useralreadygradedthisitemfinal', 'gradingform_multigraders',gradingform_multigraders_instance::get_user_url($firstGradeRecord->grader)), array('class' => 'alert-error'));
             }else{//the final grade was not added yet
-             //   $finalGradeMessage = html_writer::tag('div', get_string('useralreadygradedthisitem', 'gradingform_multigraders'), array('class' => 'alert-error'));
+                //   $finalGradeMessage = html_writer::tag('div', get_string('useralreadygradedthisitem', 'gradingform_multigraders'), array('class' => 'alert-error'));
             }
         }
         if (($mode == gradingform_multigraders_controller::DISPLAY_EVAL_FULL ||
-             $mode == gradingform_multigraders_controller::DISPLAY_EVAL ) && //current user is an ADMIN or a teacher
+                $mode == gradingform_multigraders_controller::DISPLAY_EVAL ) && //current user is an ADMIN or a teacher
             $firstGradeRecord){
             $allowFinalGradeEdit = false;
             $userIsAllowedToGrade = false;
@@ -301,7 +304,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         }
 
         //display the number of grades added
-       /* if ($mode == gradingform_multigraders_controller::DISPLAY_EVAL ||
+        /* if ($mode == gradingform_multigraders_controller::DISPLAY_EVAL ||
             $mode == gradingform_multigraders_controller::DISPLAY_EVAL_FULL){
             if(count($values['grades']) > 0){
                 $gradeNoText = count($values['grades']);
@@ -319,6 +322,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
             $output .= html_writer::tag('div',$out , array('class' => $class));
         }*/
 
+        $output_grade='';
         //previous grades part
         if($currentRecord && $userIsAllowedToGrade){
             $currentRecord->allowEdit = true;
@@ -347,7 +351,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                     if($record == $firstGradeRecord){
                         $additionalClass = 'finalGrade';
                     }
-                    $output .= $this->display_grade($record, $additionalClass, $mode);
+                    $output_grade .= $this->display_grade($record, $additionalClass, $mode);
                 }
             }
         }
@@ -380,16 +384,17 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                 $firstGradeRecord = $newRecord;
             }
 
-            $output .= $this->display_grade($newRecord,$additionalClass);
+            $output_grade .= $this->display_grade($newRecord, $additionalClass);
         }
 
+        $output_funal='';
         //multigraders_allow_final_edit
         if($allowFinalGradeEdit){
             $userIsAllowedToGrade = true;
             $atts = array('type' => 'hidden',
                 'name' => 'multigraders_allow_final_edit',
                 'value' => 'true');
-            $output .= html_writer::empty_tag('input', array_merge($atts));
+            $output_funal .= html_writer::empty_tag('input', array_merge($atts));
         }
         if($this->gradingDisabled){
             $userIsAllowedToGrade = false;
@@ -398,7 +403,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         $atts = array('type' => 'hidden',
             'name' => 'multigraders_user_is_allowed_edit',
             'value' => ($userIsAllowedToGrade ? 'true' : 'false'));
-        $output .= html_writer::empty_tag('input', array_merge($atts));
+        $output_funal .= html_writer::empty_tag('input', array_merge($atts));
 
         //delete button for admins
         $systemcontext = context_system::instance();
@@ -407,7 +412,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                 'title' => get_string('clicktodeleteadmin', 'gradingform_multigraders'),
                 'class' => 'delete_button');
             $deleteButton = html_writer::tag('a', get_string('clicktodeleteadmin', 'gradingform_multigraders'), $atts);
-            $output .= $deleteButton;
+            $output_funal .= $deleteButton;
             $atts = array('type' => 'hidden',
                 'name' => $this->elementName . '[multigraders_delete_all]',
                 'class' => 'multigraders_delete_all',
@@ -415,10 +420,18 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
             $output .= html_writer::empty_tag('input', array_merge($atts));
         }
 
-        return html_writer::tag('div',$output . $finalGradeMessage , array('class' => 'gradingform_multigraders'));
+
+       // return html_writer::tag('div', $output .$output_grade.$output_funal. $finalGradeMessage, array('class' => 'gradingform_multigraders')); 
+      
+         ob_start();
+        //  $mform ->addElement('html','<div>'.$output . $finalGradeMessage.'</div>');
+        $form->display();
+        $out = ob_get_contents();  
+        ob_end_clean();
+        return $out; 
     }
 
-/**
+    /**
      * Returns compiled html to display one grader record
      *
      * @param gradingform_multigraders_instance $record
@@ -436,7 +449,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         }
 
         //outcomes
-$outcomesDiv = '';
+        $outcomesDiv = '';
         if($this->outcomes) {
             $outcomesDiv = html_writer::tag('div', $this->display_outcomes($record, $mode), array('class' => 'grade-outcomes'));
         }
@@ -511,14 +524,40 @@ $outcomesDiv = '';
         $gradeWrapDiv = html_writer::tag('div', $gradeDiv . $editButton . $userDetails . $timeDiv, array('class' => 'grade-wrap'));
         //feedback
         $atts = array(
-            'for' => $this->elementName.'_feedback_'.$record->grader,
-            'class' => 'col-form-label d-inline');
-        $feedbackLabel = html_writer::tag('label', get_string('feedback_label', 'gradingform_multigraders'), $atts);
-        $atts = array('rows' => '3',
-            'id' => $this->elementName.'_feedback_'.$record->grader,
-            'name' => $this->elementName.'[feedback]',
-            'class' => 'grader_feedback');
-        $feedback = html_writer::tag('textarea', $record->feedback, array_merge($atts,$commonAtts));
+            'for' => $this->elementName . '_feedback_' . $record->grader,
+            'class' => 'col-form-label d-inline'
+        );
+        //$feedbackLabel = html_writer::tag('label', get_string('feedback_label', 'gradingform_multigraders'), $atts);
+        $atts = array(
+            'rows' => '3',
+            'id' => $this->elementName . '_feedback_' . $record->grader,
+            'name' => $this->elementName . '[feedback]',
+            'class' => 'grader_feedback'
+        );
+        //  $feedback = html_writer::tag('textarea', $record->feedback, array_merge($atts,$commonAtts));
+
+/* echo'salut';
+        ob_start();
+        $mform = new MoodleQuickForm('gradeform2', 'post', null, '', null, null);
+   
+        $mform->addElement('editor', 'neweditor');
+        // $feedbackDiv=$feedback
+        $mform->toHtml();//HTML_QuickForm();
+        ob_get_clean(); */
+
+        /*   $mform->set_init_html_editor();
+        $feedback = array();
+        $feedback[] = &$mform->createElement('htmleditor', 'feedback'); */
+
+        /*  ob_start();
+        $form->display();
+        $output = ob_get_clean(); */
+
+        /*   ob_start();
+        $form->display();
+        $output = ob_get_clean();
+        return $OUTPUT->box($output); */
+
         $copyButton = '';
         if(isset($record->allowCopyingOfDataToFinal) && $record->allowCopyingOfDataToFinal) {
             $atts = array('href' => 'javascript:void(null)',
@@ -526,7 +565,7 @@ $outcomesDiv = '';
                 'class' => 'copy_button');
             $copyButton = html_writer::tag('a', get_string('clicktocopy', 'gradingform_multigraders'), $atts);
         }
-        $feedbackDiv = html_writer::tag('div', $feedbackLabel. $feedback . $copyButton, array('class' => 'grade_feedback'));
+       // $feedbackDiv .= html_writer::tag('div', $feedbackLabel . $feedback1 . $copyButton, array('class' => 'grade_feedback'));
         //show to students
         if($this->options->show_intermediary_to_students) {
             $atts = array(
@@ -547,18 +586,18 @@ $outcomesDiv = '';
                 'id' => 'input_notify_student',
                 'name' => $this->elementName . '[notify_student]',
                 'type' => 'hidden',
-                'value' => 'true');              
-                $input_not= html_writer::empty_tag('input',array_merge( $atts_notify));
-                $inputNotify= html_writer::tag('div', $input_not, array('class'=> 'int_notify_student'));
-            }else{
-                $atts_notify = array(
-                    'id' => 'input_notify_student',
-                    'name' => $this->elementName . '[notify_student]',
-                    'type' => 'hidden',
-                    'value' => 'false');              
-                    $input_not= html_writer::empty_tag('input',array_merge( $atts_notify));
-                    $inputNotify= html_writer::tag('div', $input_not, array('class'=> 'int_notify_student'));
-            }
+                'value' => 'true');
+            $input_not= html_writer::empty_tag('input',array_merge( $atts_notify));
+            $inputNotify= html_writer::tag('div', $input_not, array('class'=> 'int_notify_student'));
+        }else{
+            $atts_notify = array(
+                'id' => 'input_notify_student',
+                'name' => $this->elementName . '[notify_student]',
+                'type' => 'hidden',
+                'value' => 'false');
+            $input_not= html_writer::empty_tag('input',array_merge( $atts_notify));
+            $inputNotify= html_writer::tag('div', $input_not, array('class'=> 'int_notify_student'));
+        }
         //final grade
         $finalGrade = '';
         if(isset($record->gradingFinal) && $record->gradingFinal) {
@@ -612,10 +651,18 @@ $outcomesDiv = '';
         if($error){
             $errorDiv = html_writer::tag('div', $error, array('class' => 'gradingform_multigraders-error'));
         }
-        return html_writer::tag('div', $outcomesDiv . $gradeWrapDiv. $feedbackDiv . $showToStudents . $inputNotify. $requireSecondGrader. $finalGrade. $errorDiv, array('class' => 'coursebox multigraders_grade '.$additionalClass));
-    }
+      /*   ob_start();
+         $mform = new MoodleQuickForm('gradeform2', 'post', null, '', null, null);
+         $mform-> addElement('html','<div class="coursebox multigraders_grade '.$additionalClass.'">'.$outcomesDiv . $gradeWrapDiv); 
+         $mform->addElement('editor', 'feedback');
+         $mform-> addElement('html', $showToStudents . $inputNotify. $requireSecondGrader. $finalGrade. $errorDiv.'</div>');
+         $mform->toHtml();
+         ob_get_clean(); */
+         
+       return html_writer::tag('div', $outcomesDiv . $gradeWrapDiv . 'aici' . $showToStudents . $inputNotify . $requireSecondGrader . $finalGrade . $errorDiv, array('class' => 'coursebox multigraders_grade ' . $additionalClass));
+      }
 
-/**
+    /**
      * Returns the text to show for the grader of a record
      *
      * @param gradingform_multigraders_instance $record
@@ -629,7 +676,7 @@ $outcomesDiv = '';
         return get_string('graderdetails_display', 'gradingform_multigraders',gradingform_multigraders_instance::get_user_url($record->grader));
     }
 
-/**
+    /**
      * Returns the html to display the outcome data for a particular record
      *
      * @param gradingform_multigraders_instance $record
@@ -664,7 +711,7 @@ $outcomesDiv = '';
                 $mode == gradingform_multigraders_controller::DISPLAY_EVAL_FROZEN){
                 $outcomeText =  html_writer::tag('div',
                     html_writer::tag('span', $outcome->name.': ').
-                    html_writer::tag('span', $val,Array('class'=>'outcome_value')),
+                        html_writer::tag('span', $val,Array('class'=>'outcome_value')),
                     array('class' => ''));
                 $outcomeSelect = '';
             }else {
