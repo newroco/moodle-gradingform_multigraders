@@ -74,6 +74,7 @@
  }
  .multigraders_grade.finalGrade {
      background: #cfefcf;
+     padding: 10px;
  }
  .multigraders_grade .grade-wrap{
      width: 100%;
@@ -82,37 +83,34 @@
  .multigraders_grade div.grade{
      height: 3em;
      float: left;
-     width: 7em;
+     width: 8em;
+     border-radius: 1;
  }
  .multigraders_grade div.grade input,
  .multigraders_grade div.grade select{
      width: 7em;
      text-align: right;
      float: left;
-     border-radius: 0;
+     border-radius: 1;
      padding: 1px;
      margin: 0;
  }
  .multigraders_grade div.grade select{
-     width: 7em;
+     width: 8em;
      text-align: left;
+     padding-left: 12px;
  }
  .multigraders_grade span.grade_range{
      float: left;
      color: #999;
      font-size: 12px;
+     padding-left: 2px;
  }
  .multigraders_grade .grade_feedback{
-     width: 95%;
-     min-width: 180px;
- }
- .multigraders_grade .grade_feedback textarea{
      width: 100%;
-     max-width: 100%;
-     min-width: 100%;
-     margin: 0;
-     min-height: 80px;
- }
+     min-width: 180px;
+     padding: 15px 0px 5px 0px;
+     }
  .multigraders_grade .grade-outcomes{
      clear: both;
  }
@@ -148,7 +146,7 @@
  .multigraders_grade .grader{
      float: left;
      min-width: 80px;
-     padding:0 5px;
+     padding:15px 6px 0px 6px;
  }
  .multigraders_grade .grader_name{
      color:#01325F;
@@ -158,6 +156,7 @@
      float: left;
      min-width: 80px;
      color: #666;
+     padding-top: 15px;
  }
  .multigraders_grade .visible_to_students{
  }
@@ -173,3 +172,54 @@
  .multigraders_grade.review .grade_feedback{
      clear: both;
  }
+
+ #fitem_id_advancedgrading{
+    display: none;
+ }
+
+ div.grader_feedback{
+    text-align: left;
+    background-color: white;
+    font-size: medium;
+    border: 1px solid rgba(0,0,0,.125);
+    padding: 10px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 100%;
+    margin: 0;
+    min-height: 40px;
+ }
+
+.gradingform_total{
+    background: #fff;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(0,0,0,.125);
+    padding: 2.25rem;
+    margin-bottom: 1rem;
+}
+.grade_feedback .form-group.row.fitem.femptylabel.has-popout{
+    display: contents;
+}
+.grade_feedback .col-md-3{
+    border-bottom: none!important;
+    margin-bottom: 0px!important;
+}
+
+#fitem_id_currentgrade{
+    font-weight: bold!important;
+    padding-bottom: 10px;
+}
+
+#fitem_id_currentgrade .col-md-3{
+    max-width: 19%!important;
+}
+
+#require_second_grader,
+.visible_to_students{
+    display:flex;
+}
+#require_second_grader span,
+.visible_to_students span{
+    vertical-align: middle;
+    padding-left: 5px;
+}

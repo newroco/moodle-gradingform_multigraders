@@ -915,7 +915,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
             'itemid' => $data['itemid'],
             'grader' => $USER->id,
             'grade' => $data['grade'],
-            'feedback' => $data['feedback'],
+            'feedback' => $data['feedback'] ? ($data['feedback'][$USER->id] ? $data['feedback'][$USER->id]['text'] : '') : '',
             'type' => $gradeType,
             'timestamp' => time(),
             'visible_to_students' => $data['visible_to_students'],
@@ -1060,7 +1060,9 @@ class gradingform_multigraders_instance extends gradingform_instance {
      */
     public function render_grading_element($page, $gradingformelement) {
         global $USER,$PAGE,$CFG;
-
+        
+        $form = new MoodleQuickForm('gradeform', 'post', null, '', null, null);
+        
         $module = array('name'=>'gradingform_multigraders', 'fullpath'=>'/grade/grading/form/multigraders/js/multigraders.js');
         $page->requires->js_init_call('M.gradingform_multigraders.init', null, false, $module);
 
@@ -1079,15 +1081,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
         }
 
 
-        $html = '';
-        $form = new MoodleQuickForm('gradeform2', 'post', null, '', null, null);
-
         if ($this->options->blind_marking) {
-           /*  $html .= html_writer::tag(
-                'div',
-                get_string('blind_marking_explained', 'gradingform_multigraders'),
-                array('class' => 'gradingform_multigraders-notice', 'role' => 'alert')
-            ); */
             $form->addElement('html',"<div class='gradingform_multigraders-notice'>". get_string('blind_marking_explained', 'gradingform_multigraders').'</div>');
         }
         $values = $this->get_instance_grades();
@@ -1105,7 +1099,6 @@ class gradingform_multigraders_instance extends gradingform_instance {
                 }
             }
             if ($err = $this->validate_grading_element($value)) {
-                // $html .= html_writer::tag('div', $err, array('class' => 'gradingform_multigraders-error'));
                 $form->addElement('html',"<div class='gradingform_multigraders-error'>".$err."</div>");
 
             }
@@ -1120,8 +1113,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
             }else{
                 $finalGraderName = self::get_user_url($finalGraderId);
             }
-            $html .= html_writer::tag('div', get_string('needregrademessage', 'gradingform_multigraders',$finalGraderName),
-                array('class' => 'gradingform_multigraders-regrade', 'role' => 'alert'));
+            $form->addElement('html','<div class="gradingform_multigraders-regrade" role="alert">'.get_string('needregrademessage', 'gradingform_multigraders',$finalGraderName).'</div>');
         }
 
 
@@ -1151,9 +1143,14 @@ class gradingform_multigraders_instance extends gradingform_instance {
             ob_end_clean();
             $html .= html_writer::tag('div', $echo, array('class' => 'dump'));
         }*/
-
-$html .= $this->get_controller()->get_renderer($page)->display_form( $mode,$this->options, $values,  $gradingformelement->getName(),$this->validationErrors,$this->getGradeRange() );
-       return $html;
+       
+   
+       $this->get_controller()->get_renderer($page)->display_form($form,$mode,$this->options, $values,  $gradingformelement->getName(),$this->validationErrors,$this->getGradeRange() );
+    
+        ob_start();
+        $form->display();
+        ob_end_clean();
+        return null;
     }
 
     /**

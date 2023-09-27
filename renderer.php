@@ -82,353 +82,375 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         $this->scaleid = null;
         $this->gradingDisabled = false;
 
-        if(isset($options->criteria)) {
-            $id_user=$options->userID;
-            $user = $DB->get_record('user', array('id' => $id_user));
-            $user_name= fullname($user);
+        if($mode !== gradingform_multigraders_controller::DISPLAY_VIEW){
+            $form->addElement('html','<div id="gradingform_multigraders" class="gradingform_multigraders">');
+                $form->addElement('html','<div class="gradingform_total">');
 
-            $url_grading = new moodle_url('/mod/assign/view.php',  array('id' => $PAGE->cm->id,'action'=>'grader','userid' => $id_user));
-            $html = get_string('now_grading','gradingform_multigraders','<a href="'.$url_grading.'">'. $user_name.'</a>');
+                    if(isset($options->criteria)) {
+                        $id_user=$options->userID;
+                        $user = $DB->get_record('user', array('id' => $id_user));
+                        $user_name= fullname($user);
 
-/*             $output .= html_writer::tag('h4',$html,array('class' => 'nowgrading'));
-            $output .= html_writer::tag('div',$options->criteria, array('class' => 'coursebox multigraders_criteria')); */
+                        $url_grading = new moodle_url('/mod/assign/view.php',  array('id' => $PAGE->cm->id,'action'=>'grader','userid' => $id_user));
+                        $html = get_string('now_grading','gradingform_multigraders','<a href="'.$url_grading.'">'. $user_name.'</a>');
 
-            $form->addElement('html', "<h4 class='nowgrading'>".$html."</h4>");
-        }
-        $gradinginfo = grade_get_grades($PAGE->cm->get_course()->id,
-            'mod',
-            'assign',
-            $PAGE->cm->instance,
-            $options->userID);
+                        $form->addElement('html', "<h4 class='nowgrading'>".$html."</h4>");
+                        $form->addElement('html',"<div class='coursebox multigraders_criteria'>".$options->criteria."</div>");
+                    }
+          
 
-        if(isset($gradinginfo->items) && isset($gradinginfo->items[0])) {
-            $this->scaleid = $gradinginfo->items[0]->scaleid;
-            if(!$this->scaleid){
-                $this->scaleid = null;
+            $gradinginfo = grade_get_grades($PAGE->cm->get_course()->id,
+                'mod',
+                'assign',
+                $PAGE->cm->instance,
+                $options->userID);
+
+            if(isset($gradinginfo->items) && isset($gradinginfo->items[0])) {
+                $this->scaleid = $gradinginfo->items[0]->scaleid;
+                if(!$this->scaleid){
+                    $this->scaleid = null;
+                }
+                $this->gradingDisabled = $gradinginfo->items[0]->grades[$options->userID]->locked ||
+                    $gradinginfo->items[0]->grades[$options->userID]->overridden;
             }
-            $this->gradingDisabled = $gradinginfo->items[0]->grades[$options->userID]->locked ||
-                $gradinginfo->items[0]->grades[$options->userID]->overridden;
-        }
 
-        //obtain the grade calculation formula from outcomes if available
-        if (!empty($CFG->enableoutcomes)) {
-            $this->outcomes = $gradinginfo->outcomes;
+            //obtain the grade calculation formula from outcomes if available
+            if (!empty($CFG->enableoutcomes)) {
+                $this->outcomes = $gradinginfo->outcomes;
 
-            $assignmentInstance = $PAGE->cm->instance;
-            $courseid = $PAGE->cm->get_course()->id;
-            $gtree = new grade_tree($courseid, false, false);
-            $assignment_category = null;
-            foreach($gtree->items as $id => $item){
-                if($item->iteminstance == $assignmentInstance){
-                    $assignment_category = $item->categoryid;
+                $assignmentInstance = $PAGE->cm->instance;
+                $courseid = $PAGE->cm->get_course()->id;
+                $gtree = new grade_tree($courseid, false, false);
+                $assignment_category = null;
+                foreach($gtree->items as $id => $item){
+                    if($item->iteminstance == $assignmentInstance){
+                        $assignment_category = $item->categoryid;
+                    }
+                }
+                foreach($gtree->items as $id => $item){
+                    if($item->calculation != null && $item->iteminstance == $assignment_category){
+                        $this->outcomesCalculationFormula = $item->calculation;
+                        break;
+                    }
                 }
             }
-            foreach($gtree->items as $id => $item){
-                if($item->calculation != null && $item->iteminstance == $assignment_category){
-                    $this->outcomesCalculationFormula = $item->calculation;
-                    break;
-                }
+        
+        }
+            /**
+             * Check current user:
+             * 2. teacher (has grading capability) -  show previous grades and feed backs with grader name if any
+             * 2.a) has submitted a grading - show boxes disabled with button to allow editing
+             * 2.b) has not submitted any grade yet for this itemid - show grade and feedback box
+             * 2.b)b) the final grade has not been added yet -> this teacher may decide the final grade
+             * 2.b)c) the final grade has been added already -> only show previous grades and final
+             */
+
+            $firstGradeRecord = null;
+            $currentRecord = null;
+            $sumOfPreviousGrades = 0;
+            $sumOfPreviousOutcomes = new stdClass();
+            $this->defaultNextGrade = null;
+            $this->defaultNextOutcomes = new stdClass();
+            $allowFinalGradeEdit = true;
+            $userIsAllowedToGrade = true;
+            $previousRecord = null;
+            $currentUserIsInSecondGradersList = false;
+
+            if(isset($this->options->secondary_graders_id_list) &&
+                strstr($this->options->secondary_graders_id_list,$USER->id) !== FALSE ){
+                $currentUserIsInSecondGradersList = true;
             }
-        }
 
-        /**
-         * Check current user:
-         * 2. teacher (has grading capability) -  show previous grades and feed backs with grader name if any
-         * 2.a) has submitted a grading - show boxes disabled with button to allow editing
-         * 2.b) has not submitted any grade yet for this itemid - show grade and feedback box
-         * 2.b)b) the final grade has not been added yet -> this teacher may decide the final grade
-         * 2.b)c) the final grade has been added already -> only show previous grades and final
-         */
-
-        $firstGradeRecord = null;
-        $currentRecord = null;
-        $sumOfPreviousGrades = 0;
-        $sumOfPreviousOutcomes = new stdClass();
-        $this->defaultNextGrade = null;
-        $this->defaultNextOutcomes = new stdClass();
-        $allowFinalGradeEdit = true;
-        $userIsAllowedToGrade = true;
-        $previousRecord = null;
-        $currentUserIsInSecondGradersList = false;
-
-        if(isset($this->options->secondary_graders_id_list) &&
-            strstr($this->options->secondary_graders_id_list,$USER->id) !== FALSE ){
-            $currentUserIsInSecondGradersList = true;
-        }
-
-        //determining the default values for grade and outcome depending on the previous grade(s)
-        if($values !== null){
-            //the grades are in timestamp order!
-            foreach ($values['grades'] as $grader => $record) {
+            //determining the default values for grade and outcome depending on the previous grade(s)
+            if($values !== null){
+                //the grades are in timestamp order!
+                foreach ($values['grades'] as $grader => $record) {
+                    switch($this->options->auto_calculate_final_method){
+                        case 0://last previous grade
+                            $this->defaultNextGrade = $record->grade;
+                            break;
+                        case 1://min previous grade
+                            if($this->defaultNextGrade === null || $this->defaultNextGrade > $record->grade){
+                                $this->defaultNextGrade = $record->grade;
+                            }
+                            break;
+                        case 2://max previous grade
+                            if($this->defaultNextGrade === null || $this->defaultNextGrade < $record->grade){
+                                $this->defaultNextGrade = $record->grade;
+                            }
+                            break;
+                        case 3://avg previous grade
+                            $sumOfPreviousGrades += $record->grade;
+                            break;
+                    }
+                    if($mode !== gradingform_multigraders_controller::DISPLAY_VIEW){
+                        if(isset($record->outcomes)) {
+                            foreach ($this->outcomes as $index => $outcome){
+                                switch($this->options->auto_calculate_final_method){
+                                    case 0://last previous grade
+                                        $this->defaultNextOutcomes->$index = $record->outcomes->$index;
+                                        break;
+                                    case 1://min previous grade
+                                        if(isset($record->outcomes->$index) && ($this->defaultNextOutcomes->$index === null || $this->defaultNextOutcomes->$index > $record->outcomes->$index)){
+                                            $this->defaultNextOutcomes->$index = $record->outcomes->$index;
+                                        }
+                                        break;
+                                    case 2://max previous grade
+                                        if(isset($record->outcomes->$index) && ($this->defaultNextOutcomes->$index === null || $this->defaultNextOutcomes->$index < $record->outcomes->$index)){
+                                            $this->defaultNextOutcomes->$index = $record->outcomes->$index;
+                                        }
+                                        break;
+                                    case 3://avg previous grade
+                                        if(!isset($sumOfPreviousOutcomes->$index)){
+                                            $sumOfPreviousOutcomes->$index = 0;
+                                        }
+                                        $sumOfPreviousOutcomes->$index += $record->outcomes->$index;
+                                        break;
+                                }
+                            }
+                        } 
+                    }
+                    if(!$firstGradeRecord){
+                        $firstGradeRecord = $record;
+                    }
+                    if($record->grader == $USER->id){
+                        $currentRecord = $record;
+                    }
+                    if(!$currentRecord) {
+                        $previousRecord = $record;
+                    }
+                }
                 switch($this->options->auto_calculate_final_method){
                     case 0://last previous grade
-                        $this->defaultNextGrade = $record->grade;
                         break;
                     case 1://min previous grade
-                        if($this->defaultNextGrade === null || $this->defaultNextGrade > $record->grade){
-                            $this->defaultNextGrade = $record->grade;
-                        }
                         break;
                     case 2://max previous grade
-                        if($this->defaultNextGrade === null || $this->defaultNextGrade < $record->grade){
-                            $this->defaultNextGrade = $record->grade;
-                        }
                         break;
                     case 3://avg previous grade
-                        $sumOfPreviousGrades += $record->grade;
-                        break;
-                }
-                if(isset($record->outcomes)) {
-                    foreach ($this->outcomes as $index => $outcome){
-                        switch($this->options->auto_calculate_final_method){
-                            case 0://last previous grade
-                                $this->defaultNextOutcomes->$index = $record->outcomes->$index;
-                                break;
-                            case 1://min previous grade
-                                if(isset($record->outcomes->$index) && ($this->defaultNextOutcomes->$index === null || $this->defaultNextOutcomes->$index > $record->outcomes->$index)){
-                                    $this->defaultNextOutcomes->$index = $record->outcomes->$index;
-                                }
-                                break;
-                            case 2://max previous grade
-                                if(isset($record->outcomes->$index) && ($this->defaultNextOutcomes->$index === null || $this->defaultNextOutcomes->$index < $record->outcomes->$index)){
-                                    $this->defaultNextOutcomes->$index = $record->outcomes->$index;
-                                }
-                                break;
-                            case 3://avg previous grade
-                                if(!isset($sumOfPreviousOutcomes->$index)){
-                                    $sumOfPreviousOutcomes->$index = 0;
-                                }
-                                $sumOfPreviousOutcomes->$index += $record->outcomes->$index;
-                                break;
+                        if($sumOfPreviousGrades) {
+                            $this->defaultNextGrade = number_format(doubleval($sumOfPreviousGrades / count($values['grades'])), $decimals = 1, '.', ',');
                         }
-                    }
-                }
-                if(!$firstGradeRecord){
-                    $firstGradeRecord = $record;
-                }
-                if($record->grader == $USER->id){
-                    $currentRecord = $record;
-                }
-                if(!$currentRecord) {
-                    $previousRecord = $record;
-                }
-            }
-            switch($this->options->auto_calculate_final_method){
-                case 0://last previous grade
-                    break;
-                case 1://min previous grade
-                    break;
-                case 2://max previous grade
-                    break;
-                case 3://avg previous grade
-                    if($sumOfPreviousGrades) {
-                        $this->defaultNextGrade = number_format(doubleval($sumOfPreviousGrades / count($values['grades'])), $decimals = 1, '.', ',');
-                    }
-                    if(isset($record->outcomes)) {
-                        foreach ($this->outcomes as $index => $outcome){
-                            if($sumOfPreviousOutcomes->$index) {
-                                $this->defaultNextOutcomes->$index = floor($sumOfPreviousOutcomes->$index / count($values['grades']));
+                        if($mode !== gradingform_multigraders_controller::DISPLAY_VIEW){
+                            if(isset($record->outcomes)) {
+                                foreach ($this->outcomes as $index => $outcome){
+                                    if($sumOfPreviousOutcomes->$index) {
+                                        $this->defaultNextOutcomes->$index = floor($sumOfPreviousOutcomes->$index / count($values['grades']));
+                                    }
+                                }
                             }
                         }
-                    }
-                    break;
-            }
-        }
-        /*
-        ********FOR DEBUGGING************
-
-        ob_start();
-        var_dump($this->gradingDisabled);
-        $dmp = ob_get_contents();
-        ob_end_clean();
-        $output .= html_writer::tag('div',$dmp , array('class' => 'multigraders_grade finalGrade'));
-*/
-
-        //alter $allowFinalGradeEdit depending on current user relation to grading this item
-        if($mode == gradingform_multigraders_controller::DISPLAY_VIEW ||
-            $mode == gradingform_multigraders_controller::DISPLAY_REVIEW ||
-            $mode == gradingform_multigraders_controller::DISPLAY_EVAL_FROZEN){
-            $allowFinalGradeEdit = false;
-            $userIsAllowedToGrade = false;
-            if($firstGradeRecord === null){
-                $finalGradeMessage = html_writer::tag('div', get_string('finalgradenotdecidedyet', 'gradingform_multigraders'), array('class' => 'multigraders_grade finalGrade'));
-            }
-        }
-        if(($mode == gradingform_multigraders_controller::DISPLAY_EVAL_FULL ||
-                $mode == gradingform_multigraders_controller::DISPLAY_EVAL) && //current user is an ADMIN or a teacher
-            $currentRecord !== null &&                                      //that already graded this item
-            $firstGradeRecord !== $currentRecord){                          //but the grade they gave was not the final one
-            $allowFinalGradeEdit = false;
-            if($firstGradeRecord) {//final grade was added
-                $finalGradeMessage = html_writer::tag('div', get_string('useralreadygradedthisitemfinal', 'gradingform_multigraders',gradingform_multigraders_instance::get_user_url($firstGradeRecord->grader)), array('class' => 'alert-error'));
-            }else{//the final grade was not added yet
-                //   $finalGradeMessage = html_writer::tag('div', get_string('useralreadygradedthisitem', 'gradingform_multigraders'), array('class' => 'alert-error'));
-            }
-        }
-        if (($mode == gradingform_multigraders_controller::DISPLAY_EVAL_FULL ||
-                $mode == gradingform_multigraders_controller::DISPLAY_EVAL ) && //current user is an ADMIN or a teacher
-            $firstGradeRecord){
-            $allowFinalGradeEdit = false;
-            $userIsAllowedToGrade = false;
-            if($firstGradeRecord != $currentRecord) {//current grader is not the initial grader
-                if ($firstGradeRecord->type == gradingform_multigraders_instance::GRADE_TYPE_FINAL) {
-                    $finalGradeMessage = html_writer::tag('div',
-                        get_string('finalgradefinished_noaccess', 'gradingform_multigraders', gradingform_multigraders_instance::get_user_url($firstGradeRecord->grader)),
-                        array('class' => 'alert-error'));
-                } elseif ($previousRecord && $previousRecord->require_second_grader) {
-                    //if user is in the secondary graders list and the grade is not final, allow them to add a grade
-                    if ($currentUserIsInSecondGradersList) {
-                        $userIsAllowedToGrade = true;
-                    } else {
-                        $finalGradeMessage = html_writer::tag('div',
-                            get_string('finalgradestarted_noaccess', 'gradingform_multigraders', gradingform_multigraders_instance::get_user_url($firstGradeRecord->grader)),
-                            array('class' => 'alert-error'));
-                    }
-                } else {
-                    $finalGradeMessage = html_writer::tag('div',
-                        get_string('finalgradestarted_nosecond', 'gradingform_multigraders', gradingform_multigraders_instance::get_user_url($firstGradeRecord->grader)),
-                        array('class' => 'alert-error'));
+                        break;
                 }
             }
-        }
-        if($this->gradingDisabled) {
-            $finalGradeMessage = html_writer::tag('div', get_string('gradingdisabled', 'gradingform_multigraders'), array('class' => 'multigraders_grade finalGrade'));
-        }
+            /*
+            ********FOR DEBUGGING************
 
-        //current user is the one that gave the final grade or is grading at the moment
-        if($firstGradeRecord && $firstGradeRecord == $currentRecord){
-            $firstGradeRecord->gradingFinal = true;
-            $firstGradeRecord->allowCopyingOfDataToFinal = true;
-            $userIsAllowedToGrade = true;
-            $allowFinalGradeEdit = true;
-        }
+            ob_start();
+            var_dump($this->gradingDisabled);
+            $dmp = ob_get_contents();
+            ob_end_clean();
+            $output .= html_writer::tag('div',$dmp , array('class' => 'multigraders_grade finalGrade'));
+            */
 
-        //display the number of grades added
-        /* if ($mode == gradingform_multigraders_controller::DISPLAY_EVAL ||
-            $mode == gradingform_multigraders_controller::DISPLAY_EVAL_FULL){
-            if(count($values['grades']) > 0){
-                $gradeNoText = count($values['grades']);
-            }else{
-                $gradeNoText = 'no';
-            }
+        
 
-            $out = get_string('instancedetails_display', 'gradingform_multigraders',$gradeNoText);
-            $class = 'instance_details';
-            if(count($values['grades']) > 1) {
-                $class .= ' highlight_green';
-            }else{
-                $class .= ' highlight_red';
-            }
-            $output .= html_writer::tag('div',$out , array('class' => $class));
-        }*/
-
-        $output_grade='';
-        //previous grades part
-        if($currentRecord && $userIsAllowedToGrade){
-            $currentRecord->allowEdit = true;
-        }
-        if ($mode == gradingform_multigraders_controller::DISPLAY_VIEW ||
-            $mode == gradingform_multigraders_controller::DISPLAY_REVIEW ||
-            $mode == gradingform_multigraders_controller::DISPLAY_EVAL ||
-            $mode == gradingform_multigraders_controller::DISPLAY_EVAL_FROZEN ||
-            $mode == gradingform_multigraders_controller::DISPLAY_EVAL_FULL
-        ) {
-            if ($values !== null) {
-                //display all previous grading records in view mode
-                //if final grade was not given and this user added a grade, allow editing
-                foreach ($values['grades'] as $grader => $record) {
-                    $additionalClass = '';
-                    if($this->options->blind_marking &&
-                        !$allowFinalGradeEdit &&
-                        $record != $currentRecord &&
-                        ($firstGradeRecord == null || $firstGradeRecord->type != gradingform_multigraders_instance::GRADE_TYPE_FINAL)) {
-                        continue;
-                    }
-                    if ($allowFinalGradeEdit && $record != $firstGradeRecord) {
-                        //allow copying the feedback to final grade comments
-                        $record->allowCopyingOfDataToFinal = true;
-                    }
-                    if($record == $firstGradeRecord){
-                        $additionalClass = 'finalGrade';
-                    }
-                    $output_grade .= $this->display_grade($record, $additionalClass, $mode);
-                }
-            }
-        }
-
-        //current grade part
-        // if this is the first time this item is being graded
-        if(($userIsAllowedToGrade || $allowFinalGradeEdit) &&
-            $currentRecord === null &&
-            !$this->gradingDisabled){
-            echo 'in';
-
-            $additionalClass = '';
-            $newRecord = new stdClass();
-            $newRecord->grade = '';
-            $newRecord->feedback = '';
-            $newRecord->type = gradingform_multigraders_instance::GRADE_TYPE_INTERMEDIARY;
-            $newRecord->grader = $USER->id;
-            $newRecord->dontdisable = true;
-            $newRecord->timestamp = time();
-            $newRecord->allowEdit = true;
-            $newRecord->visible_to_students = false;
-            $newRecord->require_second_grader = false;
-
-            if($firstGradeRecord == null){
+            //current user is the one that gave the final grade or is grading at the moment
+            if($firstGradeRecord && $firstGradeRecord == $currentRecord){
+                $firstGradeRecord->gradingFinal = true;
+                $firstGradeRecord->allowCopyingOfDataToFinal = true;
+                $userIsAllowedToGrade = true;
                 $allowFinalGradeEdit = true;
-                $newRecord->gradingFinal = true;
-                $newRecord->allowCopyingOfDataToFinal = true;
-                $newRecord->allowEdit = true;
-                $additionalClass = 'finalGrade';
-                $firstGradeRecord = $newRecord;
             }
 
-            $output_grade .= $this->display_grade($newRecord, $additionalClass);
-        }
+            //display the number of grades added
+            /* if ($mode == gradingform_multigraders_controller::DISPLAY_EVAL ||
+                $mode == gradingform_multigraders_controller::DISPLAY_EVAL_FULL){
+                if(count($values['grades']) > 0){
+                    $gradeNoText = count($values['grades']);
+                }else{
+                    $gradeNoText = 'no';
+                }
 
-        $output_funal='';
-        //multigraders_allow_final_edit
-        if($allowFinalGradeEdit){
-            $userIsAllowedToGrade = true;
-            $atts = array('type' => 'hidden',
-                'name' => 'multigraders_allow_final_edit',
-                'value' => 'true');
-            $output_funal .= html_writer::empty_tag('input', array_merge($atts));
-        }
-        if($this->gradingDisabled){
-            $userIsAllowedToGrade = false;
-        }
-        //multigraders_user_is_allowed_edit
-        $atts = array('type' => 'hidden',
-            'name' => 'multigraders_user_is_allowed_edit',
-            'value' => ($userIsAllowedToGrade ? 'true' : 'false'));
-        $output_funal .= html_writer::empty_tag('input', array_merge($atts));
+                $out = get_string('instancedetails_display', 'gradingform_multigraders',$gradeNoText);
+                $class = 'instance_details';
+                if(count($values['grades']) > 1) {
+                    $class .= ' highlight_green';
+                }else{
+                    $class .= ' highlight_red';
+                }
+                $output .= html_writer::tag('div',$out , array('class' => $class));
+            }*/
 
-        //delete button for admins
-        $systemcontext = context_system::instance();
-        if (!$this->gradingDisabled && has_capability('moodle/site:config', $systemcontext)) {
-            $atts = array('href' => 'javascript:void(null)',
-                'title' => get_string('clicktodeleteadmin', 'gradingform_multigraders'),
-                'class' => 'delete_button');
-            $deleteButton = html_writer::tag('a', get_string('clicktodeleteadmin', 'gradingform_multigraders'), $atts);
-            $output_funal .= $deleteButton;
-            $atts = array('type' => 'hidden',
-                'name' => $this->elementName . '[multigraders_delete_all]',
-                'class' => 'multigraders_delete_all',
-                'value' => 'false');
-            $output .= html_writer::empty_tag('input', array_merge($atts));
+            //previous grades part
+            if( $currentRecord &&
+                $firstGradeRecord !== $currentRecord && //current user is not the initial grader
+                $firstGradeRecord->type == gradingform_multigraders_instance::GRADE_TYPE_FINAL //the grade is not published
+                ){
+                $userIsAllowedToGrade = false;
+                $allowFinalGradeEdit = false;
+            }
+            if($currentRecord && $userIsAllowedToGrade){
+                $currentRecord->allowEdit = true;
+            }
+            if ($mode == gradingform_multigraders_controller::DISPLAY_VIEW ||
+                $mode == gradingform_multigraders_controller::DISPLAY_REVIEW ||
+                $mode == gradingform_multigraders_controller::DISPLAY_EVAL ||
+                $mode == gradingform_multigraders_controller::DISPLAY_EVAL_FROZEN ||
+                $mode == gradingform_multigraders_controller::DISPLAY_EVAL_FULL
+            ) {
+                if ($values !== null) {
+                    //display all previous grading records in view mode
+                    //if final grade was not given and this user added a grade, allow editing
+                    foreach ($values['grades'] as $grader => $record) {
+                        $additionalClass = '';
+                        if($this->options->blind_marking &&
+                            !$allowFinalGradeEdit &&
+                            $record != $currentRecord &&
+                            ($firstGradeRecord == null || $firstGradeRecord->type != gradingform_multigraders_instance::GRADE_TYPE_FINAL)) {
+                            continue;
+                        }
+                        if ($allowFinalGradeEdit && $record != $firstGradeRecord) {
+                            //allow copying the feedback to final grade comments
+                            $record->allowCopyingOfDataToFinal = true;
+                        }
+                        if($record == $firstGradeRecord){
+                            $additionalClass = 'finalGrade';
+                        }
+
+                        if($mode == gradingform_multigraders_controller::DISPLAY_VIEW &&
+                        $record !== null){                            
+                            $output .=$this->display_student($record, $additionalClass);
+                        }else{
+                            $this->display_grade($form, $record, $additionalClass, $mode);
+                        }
+                    }
+                }
+            }
+
+            //current grade part
+            // if this is the first time this item is being graded
+            if(($userIsAllowedToGrade || $allowFinalGradeEdit) &&
+                $currentRecord === null &&
+                !$this->gradingDisabled){
+                echo 'in';
+
+                $additionalClass = '';
+                $newRecord = new stdClass();
+                $newRecord->grade = '';
+                $newRecord->feedback = '';
+                $newRecord->type = gradingform_multigraders_instance::GRADE_TYPE_INTERMEDIARY;
+                $newRecord->grader = $USER->id;
+                $newRecord->dontdisable = true;
+                $newRecord->timestamp = time();
+                $newRecord->allowEdit = true;
+                $newRecord->visible_to_students = false;
+                $newRecord->require_second_grader = false;
+
+                if($firstGradeRecord == null){
+                    $allowFinalGradeEdit = true;
+                    $newRecord->gradingFinal = true;
+                    $newRecord->allowCopyingOfDataToFinal = true;
+                    $newRecord->allowEdit = true;
+                    $additionalClass = 'finalGrade';
+                    $firstGradeRecord = $newRecord;
+                }
+                if($mode !== gradingform_multigraders_controller::DISPLAY_VIEW){                    
+                    $this->display_grade($form, $newRecord, $additionalClass);
+                }
+            }
+
+    if($mode !== gradingform_multigraders_controller::DISPLAY_VIEW){
+            //multigraders_allow_final_edit
+            if($allowFinalGradeEdit){
+                $userIsAllowedToGrade = true;
+                $form->addElement('html',"<input type='hidden' name='multigraders_allow_final_edit' value='true'>");
+            }
+            if($this->gradingDisabled){
+                $userIsAllowedToGrade = false;
+            }
+            //multigraders_user_is_allowed_edit      
+            $value_multigraders_user_is_allowed_edit = $userIsAllowedToGrade ? 'true' : 'false';
+            $form->addElement('html','<input type="hidden" name="multigraders_user_is_allowed_edit" value="'.$value_multigraders_user_is_allowed_edit.'">');
+
+            //delete button for admins
+            $systemcontext = context_system::instance();
+            if (!$this->gradingDisabled && has_capability('moodle/site:config', $systemcontext)) {
+            
+                $title_deleteButton=get_string('clicktodeleteadmin', 'gradingform_multigraders');
+                $form->addElement('html','<a href="javascript:void(null)" title="'.$title_deleteButton.'" class="delete_button">'.$title_deleteButton.'</a>');
+            
+                $name_multigraders_delete_all = $this->elementName . '[multigraders_delete_all]';
+                $form->addElement('html','<input type="hidden" name="'.$name_multigraders_delete_all.'" class="multigraders_delete_all" value="false">');
+            }
+
+            //alter $allowFinalGradeEdit depending on current user relation to grading this item
+            if($mode == gradingform_multigraders_controller::DISPLAY_VIEW ||
+                $mode == gradingform_multigraders_controller::DISPLAY_REVIEW ||
+                $mode == gradingform_multigraders_controller::DISPLAY_EVAL_FROZEN){
+                $allowFinalGradeEdit = false;
+                $userIsAllowedToGrade = false;
+                if($firstGradeRecord === null){
+                    $form->addElement('html','<div class="multigraders_grade finalGrade">'.get_string('finalgradenotdecidedyet', 'gradingform_multigraders'.'</div>'));
+                }
+            }
+            if(($mode == gradingform_multigraders_controller::DISPLAY_EVAL_FULL ||
+                $mode == gradingform_multigraders_controller::DISPLAY_EVAL) && //current user is an ADMIN or a teacher
+                $currentRecord !== null &&                                      //that already graded this item
+                $firstGradeRecord !== $currentRecord){                          //but the grade they gave was not the final one
+                $allowFinalGradeEdit = false;
+                if($firstGradeRecord) {//final grade was added
+                    $finalGradeMessage = get_string('useralreadygradedthisitemfinal', 'gradingform_multigraders',gradingform_multigraders_instance::get_user_url($firstGradeRecord->grader));
+                    $form->addElement('html','<div class="alert-error">'.$finalGradeMessage.'</div>');
+                }else{//the final grade was not added yet
+                    //   $finalGradeMessage = html_writer::tag('div', get_string('useralreadygradedthisitem', 'gradingform_multigraders'), array('class' => 'alert-error'));
+                }
+            }
+            if (($mode == gradingform_multigraders_controller::DISPLAY_EVAL_FULL ||
+                $mode == gradingform_multigraders_controller::DISPLAY_EVAL ) && //current user is an ADMIN or a teacher
+                $firstGradeRecord){
+                $allowFinalGradeEdit = false;
+                $userIsAllowedToGrade = false;
+                if($firstGradeRecord != $currentRecord) {//current grader is not the initial grader
+                    if ($firstGradeRecord->type == gradingform_multigraders_instance::GRADE_TYPE_FINAL) {
+                        $finalGradeMessage = get_string('finalgradefinished_noaccess', 'gradingform_multigraders', gradingform_multigraders_instance::get_user_url($firstGradeRecord->grader));
+                        $form->addElement('html','<div class="alert-error">'.$finalGradeMessage.'</div>');
+                    } elseif ($previousRecord && $previousRecord->require_second_grader) {
+                        //if user is in the secondary graders list and the grade is not final, allow them to add a grade
+                        if ($currentUserIsInSecondGradersList) {
+                            $userIsAllowedToGrade = true;
+                        } else {
+                            $finalGradeMessage =get_string('finalgradestarted_noaccess', 'gradingform_multigraders', gradingform_multigraders_instance::get_user_url($firstGradeRecord->grader));
+                            $form->addElement('html','<div class="alert-error">'.$finalGradeMessage.'</div>');
+                        }
+                    } else {
+                        $finalGradeMessage =get_string('finalgradestarted_nosecond', 'gradingform_multigraders', gradingform_multigraders_instance::get_user_url($firstGradeRecord->grader));
+                        $form->addElement('html','<div class="alert-error">'.$finalGradeMessage.'</div>');
+                    }
+                }
+            }
+            if($this->gradingDisabled) {
+             $form->addElement('html','<div class="multigraders_grade finalGrade">'.get_string('gradingdisabled', 'gradingform_multigraders').'</div>');
+            }
+            $form->addElement('html','</div>');
+        
+        }else{
+            return html_writer::tag('div',$output , array('class' => 'gradingform_multigraders'));
         }
+    }
 
-
-       // return html_writer::tag('div', $output .$output_grade.$output_funal. $finalGradeMessage, array('class' => 'gradingform_multigraders')); 
-      
-         ob_start();
-        //  $mform ->addElement('html','<div>'.$output . $finalGradeMessage.'</div>');
-        $form->display();
-        $out = ob_get_contents();  
-        ob_end_clean();
-        return $out; 
+    public function display_student($record,$additionalClass){
+         //show second feedback to students
+        if($this->options->show_intermediary_to_students) {
+            $time = date(get_string('timestamp_format', 'gradingform_multigraders'), $record->timestamp);
+            $timeDiv = html_writer::tag('div', $time, array('class' => 'timestamp'));
+            $userDetails = html_writer::tag('div', '&nbsp;'.gradingform_multigraders_instance::get_user_url($record->grader), array('class' => 'grader'));
+            //$gradeDiv = html_writer::tag('div', get_string('score', 'gradingform_multigraders').': '. $record->grade, array('class' => 'grade'));
+            $feedbackDiv = html_writer::tag('div', nl2br($record->feedback), array('class' => 'grade_feedback'));
+            return html_writer::tag('div', $timeDiv . $userDetails. $feedbackDiv , array('class' => 'multigraders_grade review ' . $additionalClass));   
+        }else{
+            return '';
+        }
     }
 
     /**
@@ -439,228 +461,185 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
      * @param int $mode
      * @return string
      */
-    public function display_grade($record,$additionalClass = '',$mode = gradingform_multigraders_controller::DISPLAY_EVAL) {
+    public function display_grade($form,$record,$additionalClass = '',$mode = gradingform_multigraders_controller::DISPLAY_EVAL) {
         if($record === null){
             return '';
         }
-        $commonAtts = Array('disabled' => 'disabled');
-        if(isset($record->allowEdit) && $record->allowEdit){
-            unset($commonAtts['disabled']);
+        if(isset($record->allowEdit) && $record->allowEdit){          
+            $commonAtts='';
+        }else{
+            $commonAtts='disabled';
         }
 
-        //outcomes
-        $outcomesDiv = '';
-        if($this->outcomes) {
-            $outcomesDiv = html_writer::tag('div', $this->display_outcomes($record, $mode), array('class' => 'grade-outcomes'));
-        }
+        $form->addElement('html','<div class="coursebox multigraders_grade '. $additionalClass.'">');
 
-        //show second feedback to students
-        if( $mode == gradingform_multigraders_controller::DISPLAY_VIEW &&
-            $record !== null) {
+            //outcomes
+            if($this->outcomes) {
+                $form->addElement('html','<div class="grade-outcomes">'.$this->display_outcomes($record, $mode).'</div>');
+            }
+
+            //grade
+            $disabled ='';
+            $form->addElement('html','<div class="grade-wrap">');
+                $form->addElement('html','<div class="grade">');
+                    //in case we need a select box
+                    if($this->scaleid) {
+                        $value=$record->grade;
+
+                        if($this->outcomes) {
+                            $name_grade_hidden=$this->elementName.'[grade_hidden]';                          
+                            $form->addElement('html','<input type="hidden" name="'.$name_grade_hidden.'" value="'.$value.'" class="grade_hidden" '.$commonAtts.'>');
+                        $disabled='disabled';
+                        }
+                    
+                        $type='text';                  
+                        $name_grade= $this->elementName.'[grade]'. '['.$record->grader.']';
+                        $data_grade_range_min=$this->gradeRange ? $this->gradeRange->minGrade : '';
+                        $data_grade_range_max=$this->gradeRange ? $this->gradeRange->maxGrade : '';
+                        $opts = make_grades_menu(-$this->scaleid);
+                        $data_formula=$this->outcomesCalculationFormula;
+                        unset($type);
+                        unset($name);
+
+                        $myselect =$form->addElement('select',$name_grade,'',$opts);
+                        $myselect->_attributes['name'] =$name_grade;
+                        $myselect->_attributes['type'] ='text';
+                        $myselect->_attributes['disabled'] =$disabled;
+                        $myselect->_attributes['title'] = $data_formula;
+                        $myselect->_attributes['data-formula'] = $data_formula;
+                        $myselect->_attributes['data-grade-range-min'] =$data_grade_range_min;
+                        $myselect->_attributes['data-grade-range-max'] =$data_grade_range_max;
+                        $myselect->setSelected($value);                        
+                        $form->setType($name_grade,PARAM_TEXT);
+                    }
+                    if(!$this->scaleid) {
+                        if($this->outcomes) {
+                            $readonly = 'readonly';
+                        }
+                        $data_formula=$form->addElement('html','<input type="'.$type.'" name="'.$name_grade.'" value="'.$value.'" data-formula="'.$this->outcomesCalculationFormula.'"
+                        title="'.$this->outcomesCalculationFormula.'" data-grade-range-min="'.$data_grade_range_min.'" data-grade-range-max="'.$data_grade_range_max.'"
+                        class="grade" "'.$commonAtts.$readonly .'">');
+                    }
+
+                    if($this->gradeRange) {
+                        $form->addElement('html','<span class="grade_range">'.$this->gradeRange->minGrade.'-'.$this->gradeRange->maxGrade."</span>");
+                    }
+            
+                    $form->addElement('html','<input type="hidden" name="'.$this->elementName.'[type]'.'" value="'.$record->type.'" '.$commonAtts.'>');
+                
+                $form->addElement('html','</div>');
+                $form->addElement('html','<div class="grader">"'.$this->display_grader_details($record).'"</div>');
+
+                $time = date(get_string('timestamp_format', 'gradingform_multigraders'),$record->timestamp);
+                $form->addElement('html','<div class="timestamp">'. $time.'</div>');
+                $form->addElement('html','<div class="grader_id" style="display:none">'. $record->grader.'</div>');
+
+            $form->addElement('html','</div>');
+        
+            //feedback
+            $form->addElement('html','<div class="grade_feedback">');
+
+                $for_feedbackLabel= $this->elementName . '_feedback_' . $record->grader;
+                $form->addElement('html','<label class="col-form-label d-inline" for="'.$for_feedbackLabel.'">'.get_string('feedback_label', 'gradingform_multigraders').'</label>');
+
+                $id_grader_feedback = $this->elementName . '_feedback_' . $record->grader;
+                $name_grader_feedback=$this->elementName . '[feedback]'. '['.$record->grader.']';
+
+                if($commonAtts == 'disabled'){
+                    $form->addElement('html','<div id="'.$id_grader_feedback.'" name="'.$name_grader_feedback.'" class="grader_feedback">'. $record->feedback.'</div>');
+                }else{               
+                    $editor = $form->addElement('editor', $id_grader_feedback);
+                    $editor->setValue( array('text' => $record->feedback) );
+                    $editor->_attributes['name'] = $name_grader_feedback;
+                    $editor->_attributes['id'] = $id_grader_feedback;
+                    $form->setType($id_grader_feedback, PARAM_RAW );
+                }
+
+                if(isset($record->allowCopyingOfDataToFinal) && $record->allowCopyingOfDataToFinal) {
+                    $title = get_string('clicktocopy', 'gradingform_multigraders');
+                    $form->addElement('html','<a href="javascript:void(null)" title="'.$title.'" class="copy_button">'.get_string('clicktocopy', 'gradingform_multigraders').'</a>');
+                }
+            $form->addElement('html','</div>');
+
+            //show to students
             if($this->options->show_intermediary_to_students) {
-                $time = date(get_string('timestamp_format', 'gradingform_multigraders'), $record->timestamp);
-                $timeDiv = html_writer::tag('div', $time, array('class' => 'timestamp'));
-                $userDetails = html_writer::tag('div', '&nbsp;'.gradingform_multigraders_instance::get_user_url($record->grader), array('class' => 'grader'));
-                //$gradeDiv = html_writer::tag('div', get_string('score', 'gradingform_multigraders').': '. $record->grade, array('class' => 'grade'));
-                $feedbackDiv = html_writer::tag('div', nl2br($record->feedback), array('class' => 'grade_feedback'));
-                return html_writer::tag('div', $timeDiv . $userDetails. $feedbackDiv , array('class' => 'multigraders_grade review ' . $additionalClass));
+            
+                $checked_visible_to_students='';
+                if ($record->visible_to_students) {
+                    $checked_visible_to_students .= 'checked="checked"';
+                }
+                        
+                $name_visible_to_students=$this->elementName . '[visible_to_students]';
+                $form->addElement('html','<div class="visible_to_students">');
+                    $form->addElement('html','<input name="'.$name_visible_to_students.'" type="checkbox" value="1" ' .$checked_visible_to_students.' '.$commonAtts.'>');
+                    $form->addElement('html',"<span>".get_string('visible_to_students', 'gradingform_multigraders')."</span>");
+                $form->addElement('html','</div>');
+            }
+
+            $value='false';
+            if($this->options->show_notify_student_box){
+                $value='true';
+            }
+
+            $name_notify=$this->elementName . '[notify_student]';
+            $form->addElement('html','<div class="int_notify_student">');
+                $form->addElement('html','<input id="input_notify_student" name="'.$name_notify.'" type="hidden" value="'.$value.'" ' .$checked.'>');
+            $form->addElement('html','</div>');
+
+
+
+            //require second grader
+            
+            if (!$record->require_second_grader) {
+                $checked_require_second_grader = '';
             }else{
-                return '';
+                $checked_require_second_grader= 'checked="checked"';
             }
-        }
+        
+            $name_checkbox_require_second_grader = $this->elementName . '[require_second_grader]';
+            $form->addElement('html','<div id="require_second_grader">');
+                $form->addElement('html','<input name="'.$name_checkbox_require_second_grader.'" type="checkbox" class="require_second_grader" value="1"  '.$checked_require_second_grader.' '.$commonAtts.'>');
+                $form->addElement('html','<span>'.get_string('require_second_grader', 'gradingform_multigraders').'</span>');
+            $form->addElement('html','</div>');
 
-        //grade
-        $grade = '';
-        $atts = array('type' => 'text',
-            'name' => $this->elementName.'[grade]',
-            'value' => $record->grade,
-            'data-formula' => $this->outcomesCalculationFormula,
-            'title' => $this->outcomesCalculationFormula,
-            'data-grade-range-min' => $this->gradeRange ? $this->gradeRange->minGrade : '',
-            'data-grade-range-max' => $this->gradeRange ? $this->gradeRange->maxGrade : '',
-            'class' => 'grade');
-        //in case we need a select box
-        if($this->scaleid) {
-            if($this->outcomes) {
-                $atts2 = array('type' => 'hidden',
-                    'name' => $this->elementName.'[grade_hidden]',
-                    'value' => $record->grade,
-                    'class' => 'grade_hidden');
-                $grade .= html_writer::empty_tag('input', array_merge($atts2, $commonAtts));
-                $atts['disabled'] = 'disabled';
+
+
+            //final grade
+            $form->addElement('html','<div class="final_grade">');
+                if(isset($record->gradingFinal) && $record->gradingFinal) {
+            
+                    $name_grading_final=$this->elementName . '[grading_final]';
+                    $form->addElement('html','<input name="'.$name_grading_final.'" type="hidden" value="1">');
+
+                    $checked= 'checked';
+                    if ($record->type != gradingform_multigraders_instance::GRADE_TYPE_FINAL) {
+                        unset($checked);
+                        $name_LabelorButton = $this->elementName . '[final_grade_publish]';
+                        $form->addElement('html','<button name="'.$name_LabelorButton.'" type="submit" class="btn btn-primary" "'.$commonAtts.'">'.get_string('final_grade_check', 'gradingform_multigraders').'</button>');
+                    }else{
+                        $form->addElement('html','<span>'.get_string('final_grade_message', 'gradingform_multigraders').'</span>');
+                    }
+                    $name_checkbox=$this->elementName . '[final_grade]';
+                    $form->addElement('html','<input name="'.$name_checkbox.'" type="checkbox" class="final_grade_check" value="1" '.$checked.$commonAtts.'>');
+                }
+            $form->addElement('html','</div>');
+
+
+            //errors
+            $error = '';
+            if(isset($this->validationErrors[$record->grader.$record->type])){
+                $error .= $this->validationErrors[$record->grader.$record->type];
             }
-            unset($atts['value']);
-            unset($atts['type']);
-            unset($atts['name']);
-            $opts = make_grades_menu(-$this->scaleid);
-            $grade .= html_writer::select($opts,$this->elementName.'[grade]',$record->grade,$nothing=array('-1'=>get_string('no_grade', 'gradingform_multigraders')),array_merge($atts, $commonAtts));
-        }
-        if(!$this->scaleid) {
-            if($this->outcomes) {
-                $atts['readonly'] = 'readonly';
+            if($this->outcomes && !$this->outcomesCalculationFormula){
+                $error .= get_string('err_noformula', 'gradingform_multigraders');
             }
-            $grade = html_writer::empty_tag('input', array_merge($atts, $commonAtts));
-        }
-        $gradeRange = '';
-        if($this->gradeRange) {
-            $atts = array('class' => 'grade_range');
-            $gradeRange = html_writer::tag('span', $this->gradeRange->minGrade.'-'.$this->gradeRange->maxGrade, $atts);
-        }
-        $atts = array('type' => 'hidden',
-            'name' => $this->elementName.'[type]',
-            'value' => $record->type);
-        $type = html_writer::empty_tag('input', array_merge($atts, $commonAtts));
-        $editButton = '';
-        /*if(isset($record->allowEdit) && $record->allowEdit && !isset($record->dontdisable)){
-            $atts = array('href' => 'javascript:void(null)',
-                'title' => get_string('clicktoedit', 'gradingform_multigraders'),
-                'class' => 'edit_button');
-            $editButton = html_writer::tag('a',' ', $atts);
-        }*/
-        $gradeDiv = html_writer::tag('div', $grade . $gradeRange . $type , array('class' => 'grade'));
-        $userDetails = html_writer::tag('div',$this->display_grader_details($record) , array('class' => 'grader'));
-        $time = date(get_string('timestamp_format', 'gradingform_multigraders'),$record->timestamp);
-        $timeDiv = html_writer::tag('div',$time , array('class' => 'timestamp'));
-        $gradeWrapDiv = html_writer::tag('div', $gradeDiv . $editButton . $userDetails . $timeDiv, array('class' => 'grade-wrap'));
-        //feedback
-        $atts = array(
-            'for' => $this->elementName . '_feedback_' . $record->grader,
-            'class' => 'col-form-label d-inline'
-        );
-        //$feedbackLabel = html_writer::tag('label', get_string('feedback_label', 'gradingform_multigraders'), $atts);
-        $atts = array(
-            'rows' => '3',
-            'id' => $this->elementName . '_feedback_' . $record->grader,
-            'name' => $this->elementName . '[feedback]',
-            'class' => 'grader_feedback'
-        );
-        //  $feedback = html_writer::tag('textarea', $record->feedback, array_merge($atts,$commonAtts));
-
-/* echo'salut';
-        ob_start();
-        $mform = new MoodleQuickForm('gradeform2', 'post', null, '', null, null);
-   
-        $mform->addElement('editor', 'neweditor');
-        // $feedbackDiv=$feedback
-        $mform->toHtml();//HTML_QuickForm();
-        ob_get_clean(); */
-
-        /*   $mform->set_init_html_editor();
-        $feedback = array();
-        $feedback[] = &$mform->createElement('htmleditor', 'feedback'); */
-
-        /*  ob_start();
-        $form->display();
-        $output = ob_get_clean(); */
-
-        /*   ob_start();
-        $form->display();
-        $output = ob_get_clean();
-        return $OUTPUT->box($output); */
-
-        $copyButton = '';
-        if(isset($record->allowCopyingOfDataToFinal) && $record->allowCopyingOfDataToFinal) {
-            $atts = array('href' => 'javascript:void(null)',
-                'title' => get_string('clicktocopy', 'gradingform_multigraders'),
-                'class' => 'copy_button');
-            $copyButton = html_writer::tag('a', get_string('clicktocopy', 'gradingform_multigraders'), $atts);
-        }
-       // $feedbackDiv .= html_writer::tag('div', $feedbackLabel . $feedback1 . $copyButton, array('class' => 'grade_feedback'));
-        //show to students
-        if($this->options->show_intermediary_to_students) {
-            $atts = array(
-                'name' => $this->elementName . '[visible_to_students]',
-                'type' => 'checkbox',
-                'value' => 1);
-            if ($record->visible_to_students) {
-                $atts['checked']= 'checked';
+            if($error){
+                $form->addElement('html','<div class="gradingform_multigraders-error">'.$error.'</div>');
             }
-            $checkbox = html_writer::empty_tag('input', array_merge($atts, $commonAtts));
-            $checkboxLabel = html_writer::tag('span', get_string('visible_to_students', 'gradingform_multigraders'));
-            $showToStudents = html_writer::tag('div', $checkbox . $checkboxLabel, array('class' => 'visible_to_students'));
-        }else{
-            $showToStudents = '';
-        }
-        if($this->options->show_notify_student_box){
-            $atts_notify = array(
-                'id' => 'input_notify_student',
-                'name' => $this->elementName . '[notify_student]',
-                'type' => 'hidden',
-                'value' => 'true');
-            $input_not= html_writer::empty_tag('input',array_merge( $atts_notify));
-            $inputNotify= html_writer::tag('div', $input_not, array('class'=> 'int_notify_student'));
-        }else{
-            $atts_notify = array(
-                'id' => 'input_notify_student',
-                'name' => $this->elementName . '[notify_student]',
-                'type' => 'hidden',
-                'value' => 'false');
-            $input_not= html_writer::empty_tag('input',array_merge( $atts_notify));
-            $inputNotify= html_writer::tag('div', $input_not, array('class'=> 'int_notify_student'));
-        }
-        //final grade
-        $finalGrade = '';
-        if(isset($record->gradingFinal) && $record->gradingFinal) {
-            $atts = array(
-                'name' => $this->elementName . '[grading_final]',
-                'type' => 'hidden',
-                'value' => 1);
-            $hiddenFinal = html_writer::empty_tag('input', $atts);
-            $atts = array(
-                'name' => $this->elementName . '[final_grade]',
-                'type' => 'checkbox',
-                'class' => 'final_grade_check',
-                'value' => 1,
-                'checked' => 'checked');
-            if ($record->type != gradingform_multigraders_instance::GRADE_TYPE_FINAL) {
-                unset($atts['checked']);
-                $buttonAtts = array(
-                    'name' => $this->elementName . '[final_grade_publish]',
-                    'type' => 'submit',
-                    'class' => 'btn btn-primary',
-                );
-                $checkboxLabelorButton = html_writer::tag('button',get_string('final_grade_check', 'gradingform_multigraders'),array_merge($buttonAtts, $commonAtts));
-            }else{
-                $checkboxLabelorButton = html_writer::tag('span',get_string('final_grade_message', 'gradingform_multigraders'));
-            }
-            $checkbox = html_writer::empty_tag('input', array_merge($atts, $commonAtts));
-            $finalGrade = html_writer::tag('div', $hiddenFinal . $checkbox . $checkboxLabelorButton);
-        }
-        //require second grader
-        $atts = array(
-            'name' => $this->elementName . '[require_second_grader]',
-            'type' => 'checkbox',
-            'class' => 'require_second_grader',
-            'value' => 1,
-            'checked' => 'checked');
-        if (!$record->require_second_grader) {
-            unset($atts['checked']);
-        }
-        $checkbox = html_writer::empty_tag('input', array_merge($atts, $commonAtts));
-        $checkboxLabel = html_writer::tag('span', get_string('require_second_grader', 'gradingform_multigraders'));
-        $requireSecondGrader = html_writer::tag('div', $checkbox . $checkboxLabel);
-        //errors
-        $errorDiv = '';
-        $error = '';
-        if(isset($this->validationErrors[$record->grader.$record->type])){
-            $error .= $this->validationErrors[$record->grader.$record->type];
-        }
-        if($this->outcomes && !$this->outcomesCalculationFormula){
-            $error .= get_string('err_noformula', 'gradingform_multigraders');
-        }
-        if($error){
-            $errorDiv = html_writer::tag('div', $error, array('class' => 'gradingform_multigraders-error'));
-        }
-      /*   ob_start();
-         $mform = new MoodleQuickForm('gradeform2', 'post', null, '', null, null);
-         $mform-> addElement('html','<div class="coursebox multigraders_grade '.$additionalClass.'">'.$outcomesDiv . $gradeWrapDiv); 
-         $mform->addElement('editor', 'feedback');
-         $mform-> addElement('html', $showToStudents . $inputNotify. $requireSecondGrader. $finalGrade. $errorDiv.'</div>');
-         $mform->toHtml();
-         ob_get_clean(); */
-         
-       return html_writer::tag('div', $outcomesDiv . $gradeWrapDiv . 'aici' . $showToStudents . $inputNotify . $requireSecondGrader . $finalGrade . $errorDiv, array('class' => 'coursebox multigraders_grade ' . $additionalClass));
-      }
+
+        $form->addElement('html','</div>');        
+    
+    }
 
     /**
      * Returns the text to show for the grader of a record
@@ -793,7 +772,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         $output = '';
         $finalGradeRecord = null;
         if($values !== null){
-            $output .= $this->display_form($mode, $options, $values);
+            $output .= $this->display_form(null,$mode, $options, $values);
         }
         return $output;
     }
