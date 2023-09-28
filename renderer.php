@@ -722,7 +722,12 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                 $opts[-1] = get_string('nooutcome', 'grades');
                 $outcomeSelect = html_writer::tag('div', html_writer::select($opts, $this->elementName . '[outcome][' . $index . ']', $val, null, $attributes), array('class' => 'fselect fitemtitle'));
             }
-            $output .= html_writer::tag('div', $outcomeText . $outcomeSelect, Array('class'=>'outcome'));
+
+            if($attributes['disabled'] =="disabled" && $outcome->name == "No grade" ){
+                $output .='';
+            }else{ 
+                $output .= html_writer::tag('div', $outcomeText . $outcomeSelect, Array('class'=>'outcome'));
+            }
         }
         return $output;
     }

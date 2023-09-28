@@ -165,66 +165,76 @@ M.gradingform_multigraders.updateGrade = function(element) {
     //get all outcome values
     Y.one(element).ancestor(".multigraders_grade").all('.outcome select[data-id]').each(function(node,index){
         const outcomeId = node.getAttribute('data-id');
-        let outcomeVal = parseFloat(jQuery(node.getDOMNode()).children(':selected').text());
+        let  select_outcomeVal=jQuery(node.getDOMNode()).children(':selected').text();
+        if(isNaN(gradeRangeMin) && isNaN(gradeRangeMax)){
+            outcomeVal = select_outcomeVal;
+            grade=node.get('value')
+        }else{
+            outcomeVal = parseFloat(select_outcomeVal);
+            outcomeVal = outcomeVal.toFixed(2);
+        }
+            
        /* const rangeMin = parseInt(node.getAttribute('data-range-min'),10);
         const rangeMax = parseInt(node.getAttribute('data-range-max'),10);
         //scale the value of the outcome to the range of the grade
         outcomeVal = (outcomeVal - rangeMin)/(rangeMax-rangeMin)*(gradeRangeMax-gradeRangeMin)+gradeRangeMin;*/
-        outcomeVal = outcomeVal.toFixed(2);
-        formula = formula.replace('##gi'+outcomeId+'##',outcomeVal);
+        formula = formula.replace('##gi'+outcomeId+'##',outcomeVal);      
     });
-    //replace non existing outcomes in the formula
-    formula = formula.replace(/##gi(\d+)##/gi,0);
-    Y.one(element).ancestor(".multigraders_grade").one('input.grade,select#id_advancedgrading_grade_'+graderId).set("title", formula);
-    formula = formula.replace('=sum','');
-    formula = formula.replace('=','');
-    try {
-        grade = eval(formula);
-    } catch (anything) {
-        //nothing
-    }
-    //update grade value
-    if(grade == null || (typeof grade == Math.NaN) ){
-        grade = '';
-    }else{
-        grade = grade.toFixed(1);
-    }
-    const ancestor = Y.one(element).ancestor(".multigraders_grade");
-    const gradeElement = ancestor.one('input.grade,select#id_advancedgrading_grade_'+graderId);
-    const tag = gradeElement.get('tagName');
-    if(tag == 'SELECT'){
-        let gradeElements = jQuery(ancestor.getDOMNode()).find('select#id_advancedgrading_grade_'+graderId+',input.grade_hidden');
-        //check if the computed grade matches one of the values in the select
-        let selectedGrade = null;
-        let prevGrade = null;
-        let prevIntGrade = null;
-        gradeElement.get("options").each( function() {
-            if(selectedGrade){
-                return;
+
+    if(!isNaN(gradeRangeMin) && !isNaN(gradeRangeMax)){
+        //replace non existing outcomes in the formula
+        formula = formula.replace(/##gi(\d+)##/gi,0);
+        Y.one(element).ancestor(".multigraders_grade").one('input.grade,select#id_advancedgrading_grade_'+graderId).set("title", formula);
+        formula = formula.replace('=sum','');
+        formula = formula.replace('=','');
+                    try {
+                grade = eval(formula);
+            } catch (anything) {
+                //nothing
             }
-            let value  = this.get('value');            
-            let intVal = parseInt(this.get('text'),10);
-            if (isNaN(intVal)) {
-                intVal = parseInt(value,10);
-            }
-            if(intVal <= grade){
-                if(Math.abs(prevIntGrade-grade) < (grade - intVal)){
-                    gradeElements.val(prevGrade);
-                    selectedGrade = prevIntGrade;
+            //update grade value
+            if(grade == null || (typeof grade == Math.NaN) ){
+                grade = '';
+            }else{
+                grade = grade.toFixed(1);
+            }   
+    }     
+        const ancestor = Y.one(element).ancestor(".multigraders_grade");
+        const gradeElement = ancestor.one('input.grade,select#id_advancedgrading_grade_'+graderId);
+        const tag = gradeElement.get('tagName');
+        if(tag == 'SELECT'){
+            let gradeElements = jQuery(ancestor.getDOMNode()).find('select#id_advancedgrading_grade_'+graderId+',input.grade_hidden');
+            //check if the computed grade matches one of the values in the select
+            let selectedGrade = null;
+            let prevGrade = null;
+            let prevIntGrade = null;
+            gradeElement.get("options").each( function() {
+                if(selectedGrade){
                     return;
                 }
-                gradeElements.val(value);
-                selectedGrade = intVal;
-                return;
-            }
-            prevGrade = value;
-            prevIntGrade = intVal;
+                let value  = this.get('value');            
+                let intVal = parseInt(this.get('text'),10);
+                if (isNaN(intVal)) {
+                    intVal = parseInt(value,10);
+                }
+                if(intVal <= grade){
+                    if(Math.abs(prevIntGrade-grade) < (grade - intVal)){
+                        gradeElements.val(prevGrade);
+                        selectedGrade = prevIntGrade;
+                        return;
+                    }
+                    gradeElements.val(value);
+                    selectedGrade = intVal;
+                    return;
+                }
+                prevGrade = value;
+                prevIntGrade = intVal;
 
-        });
-    }else {
-        gradeElement.set("value",grade);
+            });
+        }else {
+            gradeElement.set("value",grade);
+        }
     }
-}
 M.gradingform_multigraders.nl2br = function(str) {
     if (typeof str === 'undefined' || str === null) {
         return '';
