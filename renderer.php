@@ -317,10 +317,10 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                         if($record == $firstGradeRecord){
                             $additionalClass = 'finalGrade';
                         }
-
-                        if($mode == gradingform_multigraders_controller::DISPLAY_VIEW &&
-                        $record !== null){                            
-                            $output .=$this->display_student($record, $additionalClass);
+                        
+                        if($mode == gradingform_multigraders_controller::DISPLAY_VIEW){ 
+                                                   
+                            $output .= $this->display_student($record, $additionalClass);
                         }else{
                             $this->display_grade($form, $record, $additionalClass, $mode);
                         }
@@ -440,16 +440,19 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
     }
 
     public function display_student($record,$additionalClass){
-         //show second feedback to students
-        if($this->options->show_intermediary_to_students) {
-            $time = date(get_string('timestamp_format', 'gradingform_multigraders'), $record->timestamp);
-            $timeDiv = html_writer::tag('div', $time, array('class' => 'timestamp'));
-            $userDetails = html_writer::tag('div', '&nbsp;'.gradingform_multigraders_instance::get_user_url($record->grader), array('class' => 'grader'));
-            //$gradeDiv = html_writer::tag('div', get_string('score', 'gradingform_multigraders').': '. $record->grade, array('class' => 'grade'));
-            $feedbackDiv = html_writer::tag('div', nl2br($record->feedback), array('class' => 'grade_feedback'));
-            return html_writer::tag('div', $timeDiv . $userDetails. $feedbackDiv , array('class' => 'multigraders_grade review ' . $additionalClass));   
-        }else{
-            return '';
+        //show second feedback to students
+         if( $record !== null){
+            if($this->options->show_intermediary_to_students && $record->visible_to_students) {
+              
+                $time = date(get_string('timestamp_format', 'gradingform_multigraders'), $record->timestamp);
+                $timeDiv = html_writer::tag('div', $time, array('class' => 'timestamp'));
+                $userDetails = html_writer::tag('div', '&nbsp;'.gradingform_multigraders_instance::get_user_url($record->grader), array('class' => 'grader'));
+                //$gradeDiv = html_writer::tag('div', get_string('score', 'gradingform_multigraders').': '. $record->grade, array('class' => 'grade'));
+                $feedbackDiv = html_writer::tag('div', nl2br($record->feedback), array('class' => 'grade_feedback'));
+                return html_writer::tag('div', $timeDiv . $userDetails. $feedbackDiv , array('class' => 'multigraders_grade review ' . $additionalClass));   
+            }else{
+                return '';
+            }
         }
     }
 

@@ -115,6 +115,7 @@ M.gradingform_multigraders.init = function(Y, options) {
         M.gradingform_multigraders.updateGrade(event.currentTarget);
     });
  
+    //handle change of notify_student check box
    if(jQuery('.int_notify_student input#input_notify_student').val() == 'false'){
         Y.all('.flex-grow-1.align-self-center label').setStyle('display','none');
         Y.all('.flex-grow-1.align-self-center .btn.btn-link.p-0').setStyle('display','none');
