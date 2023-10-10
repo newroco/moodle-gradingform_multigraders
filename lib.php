@@ -622,11 +622,62 @@ class gradingform_multigraders_controller extends gradingform_controller {
                 )
             ), 'grade', VALUE_OPTIONAL
         );
-        return array ('grades' => $grades);
+        return array('grades' => $grades);
     }
 
-}
+    /**
+     * Publish all selected student marks
+     * @param string $error The error messages 
+     * @param array $data The list of selected userid, grader and itemid
+     */
+    public static function update_multigraders_feedback($data,&$error)
+    {
+        global $DB, $PAGE, $USER;
 
+        $grade=0;
+
+        $grader=$USER->id;       
+        $user = $DB->get_record('user', array('id' => $data['userid']));
+        $user_name= fullname($user);
+        
+        if($data['grader'] == -1){ 
+            $error = get_string('err_notgraded','gradingform_multigraders', $user_name);
+        }
+        else
+        { 
+                                                                                          
+            $sql = 'SELECT id,instanceid,itemid, grader, grade,type
+                            FROM public.mdl_gradingform_multigraders_gra
+                            where itemid='.$data['itemid'].'
+                            order by id asc
+                            limit 1';
+            $categories = $DB->get_recordset_sql($sql);
+            
+              
+            foreach ($categories as $category) { 
+                if($category->grader == $grader)
+                {                   
+                    $grade= $category->grade;
+
+                    if($category->type == 0)
+                    {                                               
+                        $gradeType = gradingform_multigraders_instance::GRADE_TYPE_FINAL; 
+                                                                    
+                        //Grade is published
+                        $newrecord = array('id' => $category->id,'type' => $gradeType);
+                        $DB->update_record('gradingform_multigraders_gra', $newrecord,TRUE);                   
+                    } 
+                }
+                else
+                { 
+                    $error = get_string('err_grader_intermediary','gradingform_multigraders', $user_name);  
+                }   
+            }
+            
+        }
+        return $grade;
+    }
+}
 /**
  * Class to manage one form grading instance.
  *
@@ -820,7 +871,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
                 $record->visible_to_students = (intval($record->visible_to_students)==1); //make DB int val into boolean.
                 $record->require_second_grader = (intval($record->require_second_grader)==1); //make DB int val into boolean.
                 $record->outcomes = json_decode($record->outcomes); //transform outcomes from JSON to object
-                $this->instanceGrades['grades'][$record->grader] = $record;
+                $this->instanceGrades['grades'][$record->grader] = $record;               
             }
         }
         return $this->instanceGrades;
@@ -1060,24 +1111,24 @@ class gradingform_multigraders_instance extends gradingform_instance {
      */
     public function render_grading_element($page, $gradingformelement) {
         global $USER,$PAGE,$CFG;
-        
+
         $form = new MoodleQuickForm('gradeform', 'post', null, '', null, null);
-        
+
         $module = array('name'=>'gradingform_multigraders', 'fullpath'=>'/grade/grading/form/multigraders/js/multigraders.js');
         $page->requires->js_init_call('M.gradingform_multigraders.init', null, false, $module);
 
         $mode = gradingform_multigraders_controller::DISPLAY_VIEW;
         if (has_capability('moodle/grade:manage', $page->context)) {
-        $mode = gradingform_multigraders_controller::DISPLAY_EVAL_FULL;
+            $mode = gradingform_multigraders_controller::DISPLAY_EVAL_FULL;
         }elseif (has_capability('moodle/grade:edit', $page->context)) {
-        $mode = gradingform_multigraders_controller::DISPLAY_EVAL;
+            $mode = gradingform_multigraders_controller::DISPLAY_EVAL;
         }elseif (has_capability('moodle/grade:viewall', $page->context)) {
-        $mode = gradingform_multigraders_controller::DISPLAY_REVIEW;
+            $mode = gradingform_multigraders_controller::DISPLAY_REVIEW;
         }elseif (has_capability('moodle/grade:view', $page->context)) {
-        $mode = gradingform_multigraders_controller::DISPLAY_VIEW;
+            $mode = gradingform_multigraders_controller::DISPLAY_VIEW;
         }
         if ($gradingformelement->_flagFrozen && $gradingformelement->_persistantFreeze && has_capability('moodle/grade:edit', $page->context)) {
-        $mode = gradingform_multigraders_controller::DISPLAY_EVAL_FROZEN;
+            $mode = gradingform_multigraders_controller::DISPLAY_EVAL_FROZEN;
         }
 
 
@@ -1143,10 +1194,10 @@ class gradingform_multigraders_instance extends gradingform_instance {
             ob_end_clean();
             $html .= html_writer::tag('div', $echo, array('class' => 'dump'));
         }*/
-       
-   
-       $this->get_controller()->get_renderer($page)->display_form($form,$mode,$this->options, $values,  $gradingformelement->getName(),$this->validationErrors,$this->getGradeRange() );
-    
+
+
+        $this->get_controller()->get_renderer($page)->display_form($form,$mode,$this->options, $values,  $gradingformelement->getName(),$this->validationErrors,$this->getGradeRange() );
+
         ob_start();
         $form->display();
         ob_end_clean();

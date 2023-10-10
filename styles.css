@@ -148,7 +148,8 @@
      min-width: 80px;
      padding:15px 6px 0px 6px;
  }
- .multigraders_grade .grader_name{
+ .multigraders_grade .grader_name,
+.student_name{
      color:#01325F;
  }
  .multigraders_grade .timestamp{
