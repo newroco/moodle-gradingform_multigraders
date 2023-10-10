@@ -92,7 +92,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                         $user_name= fullname($user);
 
                         $url_grading = new moodle_url('/mod/assign/view.php',  array('id' => $PAGE->cm->id,'action'=>'grader','userid' => $id_user));
-                        $html = get_string('now_grading','gradingform_multigraders','<a href="'.$url_grading.'">'. $user_name.'</a>');
+                        $html = get_string('now_grading','gradingform_multigraders','<a href="'.$url_grading.'"><span class="student_name">'. $user_name.'</span></a>');
 
                         $form->addElement('html', "<h4 class='nowgrading'>".$html."</h4>");
                         $form->addElement('html',"<div class='coursebox multigraders_criteria'>".$options->criteria."</div>");
