@@ -71,8 +71,8 @@ M.gradingform_multigraders.init = function(Y, options) {
     });
         Y.all('.multigraders_grade .copy_button').on('click', function(e) {
             const graderId= Y.one(e.currentTarget).ancestor(".multigraders_grade").one('.grader_id').get('text');
-            const graderName = Y.one(e.currentTarget).ancestor(".multigraders_grade").one('.grader_name').get('text');           
-            const graderFeedbackElemnt = Y.one(e.currentTarget).ancestor(".multigraders_grade").one('[name^="advancedgrading[feedback]['+graderId+']"]');     
+            const graderName = Y.one(e.currentTarget).ancestor(".multigraders_grade").one('.grader_name').get('text');
+            const graderFeedbackElemnt = Y.one(e.currentTarget).ancestor(".multigraders_grade").one('[name^="advancedgrading[feedback]['+graderId+']"]');
             let graderFeedback='';
 
             if(graderFeedbackElemnt.hasClass('grader_feedback')){
@@ -81,7 +81,7 @@ M.gradingform_multigraders.init = function(Y, options) {
                graderFeedback=graderFeedbackElemnt.get('value');
             }
 
-            let currFeedback = Y.one('#id_assignfeedbackcomments_editoreditable').getHTML();           
+            let currFeedback = Y.one('#id_assignfeedbackcomments_editoreditable').getHTML();
             if(Y.one('#id_assignfeedbackcomments_editoreditable').get('text') != ''){
                 currFeedback += "<br/><br/>";
             }
@@ -92,12 +92,30 @@ M.gradingform_multigraders.init = function(Y, options) {
         Y.all('.gradingform_multigraders .delete_button').on('click', function(e) {
         const yes = confirm('Are you sure?');
         if(yes){
+            jQuery('.path-mod-assign [data-region="overlay"]').show();
+
             jQuery('input.multigraders_delete_all').val('true');
-            jQuery('div[data-region="grade-actions"] button[name="savechanges"]').trigger( "click" );
+            jQuery('#id_assignfeedbackcomments_editoreditable').html('');
+
+            Y.all('.multigraders_grade.finalGrade .outcome select').each(function(node,index){
+                const outcomeIndex = node.getAttribute('data-index');
+                let coreOutcome = Y.one('#menuoutcome_' + outcomeIndex);
+                if (coreOutcome) {
+                    coreOutcome.all('option').each(function(option) {
+                        option.removeAttribute('selected');
+                        option.set('value', null);
+                    });
+                }
+            });
+
+            setTimeout(function() {
+                jQuery('div[data-region="grade-actions"] button[name="savechanges"]').trigger( "click" );
+                jQuery('.path-mod-assign [data-region="overlay"]').hide();
+            },9000);
         }
     });
     //this code makes sure that the value of the input consists only of digits
-    Y.all('.multigraders_grade input.grade').on('keypress', function(event) {
+    Y.all('.multigraders_grade input.grade_input').on('keypress', function(event) {
         if(event.ctrlKey){
             return;
         }
@@ -110,11 +128,11 @@ M.gradingform_multigraders.init = function(Y, options) {
             return null;
         }
     });
+
     //this code updates the grade for each outcome update depending on the formula
-        Y.all('.multigraders_grade .outcome select[data-id]').on('change', function(event) {
+    Y.all('.multigraders_grade .outcome select[data-id]').on('change', function(event) {
         M.gradingform_multigraders.updateGrade(event.currentTarget);
     });
- 
     //handle change of notify_student check box
    if(jQuery('.int_notify_student input#input_notify_student').val() == 'false'){
         Y.all('.flex-grow-1.align-self-center label').setStyle('display','none');
@@ -123,7 +141,7 @@ M.gradingform_multigraders.init = function(Y, options) {
         Y.all('.flex-grow-1.align-self-center label').setStyle('display','initial');
         Y.all('.flex-grow-1.align-self-center .btn.btn-link.p-0').setStyle('display','initial');
     }
-           
+
     //handle change of require_second_grader check box
         Y.all('.multigraders_grade input.require_second_grader').each(function(node,index){
         if(index == M.gradingform_multigraders.number_of_grades -1){
@@ -155,9 +173,9 @@ M.gradingform_multigraders.init = function(Y, options) {
 };
 M.gradingform_multigraders.updateGrade = function(element) {
     const graderId= Y.one(element).ancestor(".multigraders_grade").one('.grader_id').get('text');
-    let formula = Y.one(element).ancestor(".multigraders_grade").one('input.grade,select#id_advancedgrading_grade_'+graderId).getAttribute('data-formula');
-    let gradeRangeMin = parseInt(Y.one(element).ancestor(".multigraders_grade").one('input.grade,select#id_advancedgrading_grade_'+graderId).getAttribute('data-grade-range-min'),10);
-    let gradeRangeMax = parseInt(Y.one(element).ancestor(".multigraders_grade").one('input.grade,select#id_advancedgrading_grade_'+graderId).getAttribute('data-grade-range-max'),10);
+    let formula = Y.one(element).ancestor(".multigraders_grade").one('input.grade_input_'+graderId+',select#id_advancedgrading_grade_'+graderId).getAttribute('data-formula');
+    let gradeRangeMin = parseInt(Y.one(element).ancestor(".multigraders_grade").one('input.grade_input_'+graderId+',select#id_advancedgrading_grade_'+graderId).getAttribute('data-grade-range-min'),10);
+    let gradeRangeMax = parseInt(Y.one(element).ancestor(".multigraders_grade").one('input.grade_input_'+graderId+',select#id_advancedgrading_grade_'+graderId).getAttribute('data-grade-range-max'),10);
     let grade;
     if(!formula){
         return;
@@ -168,23 +186,23 @@ M.gradingform_multigraders.updateGrade = function(element) {
         let  select_outcomeVal=jQuery(node.getDOMNode()).children(':selected').text();
         if(isNaN(gradeRangeMin) && isNaN(gradeRangeMax)){
             outcomeVal = select_outcomeVal;
-            grade=node.get('value')
+            grade=node.get('value');
         }else{
             outcomeVal = parseFloat(select_outcomeVal);
             outcomeVal = outcomeVal.toFixed(2);
         }
-            
+
        /* const rangeMin = parseInt(node.getAttribute('data-range-min'),10);
         const rangeMax = parseInt(node.getAttribute('data-range-max'),10);
         //scale the value of the outcome to the range of the grade
         outcomeVal = (outcomeVal - rangeMin)/(rangeMax-rangeMin)*(gradeRangeMax-gradeRangeMin)+gradeRangeMin;*/
-        formula = formula.replace('##gi'+outcomeId+'##',outcomeVal);      
+        formula = formula.replace('##gi'+outcomeId+'##',outcomeVal);
     });
 
     if(!isNaN(gradeRangeMin) && !isNaN(gradeRangeMax)){
         //replace non existing outcomes in the formula
         formula = formula.replace(/##gi(\d+)##/gi,0);
-        Y.one(element).ancestor(".multigraders_grade").one('input.grade,select#id_advancedgrading_grade_'+graderId).set("title", formula);
+        Y.one(element).ancestor(".multigraders_grade").one('input.grade_input_'+graderId+',select#id_advancedgrading_grade_'+graderId).set("title", formula);
         formula = formula.replace('=sum','');
         formula = formula.replace('=','');
                     try {
@@ -197,12 +215,22 @@ M.gradingform_multigraders.updateGrade = function(element) {
                 grade = '';
             }else{
                 grade = grade.toFixed(1);
-            }   
-    }     
+            }
+    }else{
+        //if there are outcomes but isNaN(gradeRangeMin) && isNaN(gradeRangeMax)
+        //there is a set formula for outcomes
+            formula = formula.replace(/##gi(\d+)##/gi,0);
+            Y.one(element).ancestor(".multigraders_grade").one('input.grade_input_'+graderId).set("title", formula);
+            formula = formula.replace('=sum','');
+            formula = formula.replace('=','');
+            grade = eval(formula);
+    }
+
         const ancestor = Y.one(element).ancestor(".multigraders_grade");
-        const gradeElement = ancestor.one('input.grade,select#id_advancedgrading_grade_'+graderId);
+        const gradeElement = ancestor.one('input.grade_input_'+graderId+',select#id_advancedgrading_grade_'+graderId);
         const tag = gradeElement.get('tagName');
-        if(tag == 'SELECT'){
+
+        if(tag == "SELECT"){
             let gradeElements = jQuery(ancestor.getDOMNode()).find('select#id_advancedgrading_grade_'+graderId+',input.grade_hidden');
             //check if the computed grade matches one of the values in the select
             let selectedGrade = null;
@@ -212,7 +240,7 @@ M.gradingform_multigraders.updateGrade = function(element) {
                 if(selectedGrade){
                     return;
                 }
-                let value  = this.get('value');            
+                let value  = this.get('value');
                 let intVal = parseInt(this.get('text'),10);
                 if (isNaN(intVal)) {
                     intVal = parseInt(value,10);
@@ -232,7 +260,10 @@ M.gradingform_multigraders.updateGrade = function(element) {
 
             });
         }else {
-            gradeElement.set("value",grade);
+            let grade_input = jQuery(ancestor.getDOMNode()).find('input.grade_input_'+graderId+',input.grade_hidden_'+graderId);
+            let roundedGrade = Math.round(parseFloat(grade));
+            grade_input.val(roundedGrade);
+            gradeElement.set("value", roundedGrade);
         }
     }
 M.gradingform_multigraders.nl2br = function(str) {

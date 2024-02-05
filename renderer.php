@@ -97,7 +97,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                         $form->addElement('html', "<h4 class='nowgrading'>".$html."</h4>");
                         $form->addElement('html',"<div class='coursebox multigraders_criteria'>".$options->criteria."</div>");
                     }
-          
+
 
             $gradinginfo = grade_get_grades($PAGE->cm->get_course()->id,
                 'mod',
@@ -134,7 +134,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                     }
                 }
             }
-        
+
         }
             /**
              * Check current user:
@@ -165,23 +165,25 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
             if($values !== null){
                 //the grades are in timestamp order!
                 foreach ($values['grades'] as $grader => $record) {
-                    switch($this->options->auto_calculate_final_method){
-                        case 0://last previous grade
-                            $this->defaultNextGrade = $record->grade;
-                            break;
-                        case 1://min previous grade
-                            if($this->defaultNextGrade === null || $this->defaultNextGrade > $record->grade){
+                    if (isset($this->options->auto_calculate_final_method)) {
+                        switch($this->options->auto_calculate_final_method){
+                            case 0://last previous grade
                                 $this->defaultNextGrade = $record->grade;
-                            }
-                            break;
-                        case 2://max previous grade
-                            if($this->defaultNextGrade === null || $this->defaultNextGrade < $record->grade){
-                                $this->defaultNextGrade = $record->grade;
-                            }
-                            break;
-                        case 3://avg previous grade
-                            $sumOfPreviousGrades += $record->grade;
-                            break;
+                                break;
+                            case 1://min previous grade
+                                if($this->defaultNextGrade === null || $this->defaultNextGrade > $record->grade){
+                                    $this->defaultNextGrade = $record->grade;
+                                }
+                                break;
+                            case 2://max previous grade
+                                if($this->defaultNextGrade === null || $this->defaultNextGrade < $record->grade){
+                                    $this->defaultNextGrade = $record->grade;
+                                }
+                                break;
+                            case 3://avg previous grade
+                                $sumOfPreviousGrades += $record->grade;
+                                break;
+                        }
                     }
                     if($mode !== gradingform_multigraders_controller::DISPLAY_VIEW){
                         if(isset($record->outcomes)) {
@@ -208,7 +210,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                                         break;
                                 }
                             }
-                        } 
+                        }
                     }
                     if(!$firstGradeRecord){
                         $firstGradeRecord = $record;
@@ -253,7 +255,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
             $output .= html_writer::tag('div',$dmp , array('class' => 'multigraders_grade finalGrade'));
             */
 
-        
+
 
             //current user is the one that gave the final grade or is grading at the moment
             if($firstGradeRecord && $firstGradeRecord == $currentRecord){
@@ -317,12 +319,12 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                         if($record == $firstGradeRecord){
                             $additionalClass = 'finalGrade';
                         }
-                        
-                        if($mode == gradingform_multigraders_controller::DISPLAY_VIEW){ 
-                                                   
-                            $output .= $this->display_student($record, $additionalClass);
+
+                        if($mode == gradingform_multigraders_controller::DISPLAY_VIEW){
+
+                             $output .= $this->display_student($record, $additionalClass);
                         }else{
-                            $this->display_grade($form, $record, $additionalClass, $mode);
+                             $this->display_grade($form, $record, $additionalClass, $mode);
                         }
                     }
                 }
@@ -355,7 +357,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                     $additionalClass = 'finalGrade';
                     $firstGradeRecord = $newRecord;
                 }
-                if($mode !== gradingform_multigraders_controller::DISPLAY_VIEW){                    
+                if($mode !== gradingform_multigraders_controller::DISPLAY_VIEW){
                     $this->display_grade($form, $newRecord, $additionalClass);
                 }
             }
@@ -369,17 +371,17 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
             if($this->gradingDisabled){
                 $userIsAllowedToGrade = false;
             }
-            //multigraders_user_is_allowed_edit      
+            //multigraders_user_is_allowed_edit
             $value_multigraders_user_is_allowed_edit = $userIsAllowedToGrade ? 'true' : 'false';
             $form->addElement('html','<input type="hidden" name="multigraders_user_is_allowed_edit" value="'.$value_multigraders_user_is_allowed_edit.'">');
 
             //delete button for admins
             $systemcontext = context_system::instance();
             if (!$this->gradingDisabled && has_capability('moodle/site:config', $systemcontext)) {
-            
+
                 $title_deleteButton=get_string('clicktodeleteadmin', 'gradingform_multigraders');
                 $form->addElement('html','<a href="javascript:void(null)" title="'.$title_deleteButton.'" class="delete_button">'.$title_deleteButton.'</a>');
-            
+
                 $name_multigraders_delete_all = $this->elementName . '[multigraders_delete_all]';
                 $form->addElement('html','<input type="hidden" name="'.$name_multigraders_delete_all.'" class="multigraders_delete_all" value="false">');
             }
@@ -433,7 +435,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
              $form->addElement('html','<div class="multigraders_grade finalGrade">'.get_string('gradingdisabled', 'gradingform_multigraders').'</div>');
             }
             $form->addElement('html','</div>');
-        
+
         }else{
             return html_writer::tag('div',$output , array('class' => 'gradingform_multigraders'));
         }
@@ -443,13 +445,13 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         //show second feedback to students
          if( $record !== null){
             if($this->options->show_intermediary_to_students && $record->visible_to_students) {
-              
+
                 $time = date(get_string('timestamp_format', 'gradingform_multigraders'), $record->timestamp);
                 $timeDiv = html_writer::tag('div', $time, array('class' => 'timestamp'));
                 $userDetails = html_writer::tag('div', '&nbsp;'.gradingform_multigraders_instance::get_user_url($record->grader), array('class' => 'grader'));
                 //$gradeDiv = html_writer::tag('div', get_string('score', 'gradingform_multigraders').': '. $record->grade, array('class' => 'grade'));
                 $feedbackDiv = html_writer::tag('div', nl2br($record->feedback), array('class' => 'grade_feedback'));
-                return html_writer::tag('div', $timeDiv . $userDetails. $feedbackDiv , array('class' => 'multigraders_grade review ' . $additionalClass));   
+                return html_writer::tag('div', $timeDiv . $userDetails. $feedbackDiv , array('class' => 'multigraders_grade review ' . $additionalClass));
             }else{
                 return '';
             }
@@ -468,7 +470,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         if($record === null){
             return '';
         }
-        if(isset($record->allowEdit) && $record->allowEdit){          
+        if(isset($record->allowEdit) && $record->allowEdit){
             $commonAtts='';
         }else{
             $commonAtts='disabled';
@@ -482,23 +484,23 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
             }
 
             //grade
-            $disabled ='';
             $form->addElement('html','<div class="grade-wrap">');
                 $form->addElement('html','<div class="grade">');
-                    //in case we need a select box
-                    if($this->scaleid) {
-                        $value=$record->grade;
 
+                $value=$record->grade;
+                $name_grade= $this->elementName.'[grade]'. '['.$record->grader.']';
+                $data_grade_range_min=$this->gradeRange ? $this->gradeRange->minGrade : '';
+                $data_grade_range_max=$this->gradeRange ? $this->gradeRange->maxGrade : '';
+
+                //there is a selected scale
+                //in case we need a select box
+                    if($this->scaleid) {
                         if($this->outcomes) {
-                            $name_grade_hidden=$this->elementName.'[grade_hidden]';                          
+                            $name_grade_hidden=$this->elementName.'[grade_hidden]';
                             $form->addElement('html','<input type="hidden" name="'.$name_grade_hidden.'" value="'.$value.'" class="grade_hidden" '.$commonAtts.'>');
-                        $disabled='disabled';
                         }
-                    
-                        $type='text';                  
-                        $name_grade= $this->elementName.'[grade]'. '['.$record->grader.']';
-                        $data_grade_range_min=$this->gradeRange ? $this->gradeRange->minGrade : '';
-                        $data_grade_range_max=$this->gradeRange ? $this->gradeRange->maxGrade : '';
+
+                        $type='text';
                         $opts = make_grades_menu(-$this->scaleid);
                         $data_formula=$this->outcomesCalculationFormula;
                         unset($type);
@@ -507,29 +509,43 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                         $myselect =$form->addElement('select',$name_grade,'',$opts);
                         $myselect->_attributes['name'] =$name_grade;
                         $myselect->_attributes['type'] ='text';
-                        $myselect->_attributes['disabled'] =$disabled;
+                        if($this->outcomes) {
+                            $myselect->_attributes['disabled'] = 'disabled';
+                        }
                         $myselect->_attributes['title'] = $data_formula;
                         $myselect->_attributes['data-formula'] = $data_formula;
                         $myselect->_attributes['data-grade-range-min'] =$data_grade_range_min;
                         $myselect->_attributes['data-grade-range-max'] =$data_grade_range_max;
-                        $myselect->setSelected($value);                        
+                        $myselect->setSelected($value);
                         $form->setType($name_grade,PARAM_TEXT);
                     }
+
+                    //no selected scale
+                    //display an input
                     if(!$this->scaleid) {
                         if($this->outcomes) {
                             $readonly = 'readonly';
+                            $disabled_scale='disabled';
+                            $type='text';
+
+                            $name_grade_hidden=$this->elementName.'[grade_hidden]';
+                            $form->addElement('html','<input type="hidden" name="'.$name_grade_hidden.'" value="'. strval($value).'" class="grade_hidden_'.$record->grader.'">');
+                        }else{
+                            $readonly = '';
+                            $disabled_scale= $commonAtts;
+                            $type='number';
                         }
-                        $data_formula=$form->addElement('html','<input type="'.$type.'" name="'.$name_grade.'" value="'.$value.'" data-formula="'.$this->outcomesCalculationFormula.'"
-                        title="'.$this->outcomesCalculationFormula.'" data-grade-range-min="'.$data_grade_range_min.'" data-grade-range-max="'.$data_grade_range_max.'"
-                        class="grade" "'.$commonAtts.$readonly .'">');
+                        $data_formula = $form->addElement('html', '<input type="' . $type . '" name="' . $name_grade . '" value="' .  strval($value) . '" data-formula="' . $this->outcomesCalculationFormula . '"
+                        title="' . $this->outcomesCalculationFormula . '" ' . ($data_grade_range_min !== null ? 'data-grade-range-min="' . $data_grade_range_min . '"' : '') . ' ' . ($data_grade_range_max !== null ? 'data-grade-range-max="' . $data_grade_range_max . '"' : '') . '
+                        ' . $disabled_scale . ' class="grade_input_'.$record->grader.'" ' . $readonly . ' >');
                     }
 
                     if($this->gradeRange) {
                         $form->addElement('html','<span class="grade_range">'.$this->gradeRange->minGrade.'-'.$this->gradeRange->maxGrade."</span>");
                     }
-            
+
                     $form->addElement('html','<input type="hidden" name="'.$this->elementName.'[type]'.'" value="'.$record->type.'" '.$commonAtts.'>');
-                
+
                 $form->addElement('html','</div>');
                 $form->addElement('html','<div class="grader">"'.$this->display_grader_details($record).'"</div>');
 
@@ -538,7 +554,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                 $form->addElement('html','<div class="grader_id" style="display:none">'. $record->grader.'</div>');
 
             $form->addElement('html','</div>');
-        
+
             //feedback
             $form->addElement('html','<div class="grade_feedback">');
 
@@ -550,7 +566,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
 
                 if($commonAtts == 'disabled'){
                     $form->addElement('html','<div id="'.$id_grader_feedback.'" name="'.$name_grader_feedback.'" class="grader_feedback">'. $record->feedback.'</div>');
-                }else{               
+                }else{
                     $editor = $form->addElement('editor', $id_grader_feedback);
                     $editor->setValue( array('text' => $record->feedback) );
                     $editor->_attributes['name'] = $name_grader_feedback;
@@ -566,12 +582,12 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
 
             //show to students
             if($this->options->show_intermediary_to_students) {
-            
+
                 $checked_visible_to_students='';
                 if ($record->visible_to_students) {
                     $checked_visible_to_students .= 'checked="checked"';
                 }
-                        
+
                 $name_visible_to_students=$this->elementName . '[visible_to_students]';
                 $form->addElement('html','<div class="visible_to_students">');
                     $form->addElement('html','<input name="'.$name_visible_to_students.'" type="checkbox" value="1" ' .$checked_visible_to_students.' '.$commonAtts.'>');
@@ -579,26 +595,14 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                 $form->addElement('html','</div>');
             }
 
-            $value='false';
-            if($this->options->show_notify_student_box){
-                $value='true';
-            }
-
-            $name_notify=$this->elementName . '[notify_student]';
-            $form->addElement('html','<div class="int_notify_student">');
-                $form->addElement('html','<input id="input_notify_student" name="'.$name_notify.'" type="hidden" value="'.$value.'" ' .$checked.'>');
-            $form->addElement('html','</div>');
-
-
-
             //require second grader
-            
+
             if (!$record->require_second_grader) {
                 $checked_require_second_grader = '';
             }else{
                 $checked_require_second_grader= 'checked="checked"';
             }
-        
+
             $name_checkbox_require_second_grader = $this->elementName . '[require_second_grader]';
             $form->addElement('html','<div id="require_second_grader">');
                 $form->addElement('html','<input name="'.$name_checkbox_require_second_grader.'" type="checkbox" class="require_second_grader" value="1"  '.$checked_require_second_grader.' '.$commonAtts.'>');
@@ -606,17 +610,27 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
             $form->addElement('html','</div>');
 
 
+            $value_ntf='false';
+            if($this->options->show_notify_student_box){
+                $value_ntf='true';
+            }
+
+            $name_notify=$this->elementName . '[notify_student]';
+            $form->addElement('html','<div class="int_notify_student">');
+                $form->addElement('html','<input id="input_notify_student" name="'.$name_notify.'" type="hidden" value="'.$value_ntf.'" ' .$checked.'>');
+            $form->addElement('html','</div>');
 
             //final grade
             $form->addElement('html','<div class="final_grade">');
                 if(isset($record->gradingFinal) && $record->gradingFinal) {
-            
+
                     $name_grading_final=$this->elementName . '[grading_final]';
                     $form->addElement('html','<input name="'.$name_grading_final.'" type="hidden" value="1">');
 
                     $checked= 'checked';
                     if ($record->type != gradingform_multigraders_instance::GRADE_TYPE_FINAL) {
-                        unset($checked);
+                        // unset($checked);
+                        $checked='';
                         $name_LabelorButton = $this->elementName . '[final_grade_publish]';
                         $form->addElement('html','<button name="'.$name_LabelorButton.'" type="submit" class="btn btn-primary" "'.$commonAtts.'">'.get_string('final_grade_check', 'gradingform_multigraders').'</button>');
                     }else{
@@ -640,8 +654,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                 $form->addElement('html','<div class="gradingform_multigraders-error">'.$error.'</div>');
             }
 
-        $form->addElement('html','</div>');        
-    
+        $form->addElement('html','</div>');
     }
 
     /**
@@ -723,9 +736,9 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                 $outcomeSelect = html_writer::tag('div', html_writer::select($opts, $this->elementName . '[outcome][' . $index . ']', $val, null, $attributes), array('class' => 'fselect fitemtitle'));
             }
 
-            if($attributes['disabled'] =="disabled" && $outcome->name == "No grade" ){
+            if(isset($attributes['disabled']) && $attributes['disabled'] =="disabled" && $outcome->name == "No grade" ){
                 $output .='';
-            }else{ 
+            }else{
                 $output .= html_writer::tag('div', $outcomeText . $outcomeSelect, Array('class'=>'outcome'));
             }
         }
@@ -782,7 +795,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         if($values !== null){
             $output .= $this->display_form(null,$mode, $options, $values);
         }
-        return $output;
+        return $output.'display_instance';
     }
 
     /**

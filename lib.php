@@ -627,7 +627,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
 
     /**
      * Publish all selected student marks
-     * @param string $error The error messages 
+     * @param string $error The error messages
      * @param array $data The list of selected userid, grader and itemid
      */
     public static function update_multigraders_feedback($data,&$error)
@@ -636,44 +636,44 @@ class gradingform_multigraders_controller extends gradingform_controller {
 
         $grade=0;
 
-        $grader=$USER->id;       
+        $grader=$USER->id;
         $user = $DB->get_record('user', array('id' => $data['userid']));
         $user_name= fullname($user);
-        
-        if($data['grader'] == -1){ 
+
+        if($data['grader'] == -1){
             $error = get_string('err_notgraded','gradingform_multigraders', $user_name);
         }
         else
-        { 
-                                                                                          
+        {
+
             $sql = 'SELECT id,instanceid,itemid, grader, grade,type
                             FROM public.mdl_gradingform_multigraders_gra
                             where itemid='.$data['itemid'].'
                             order by id asc
                             limit 1';
             $categories = $DB->get_recordset_sql($sql);
-            
-              
-            foreach ($categories as $category) { 
+
+
+            foreach ($categories as $category) {
                 if($category->grader == $grader)
-                {                   
+                {
                     $grade= $category->grade;
 
                     if($category->type == 0)
-                    {                                               
-                        $gradeType = gradingform_multigraders_instance::GRADE_TYPE_FINAL; 
-                                                                    
+                    {
+                        $gradeType = gradingform_multigraders_instance::GRADE_TYPE_FINAL;
+
                         //Grade is published
                         $newrecord = array('id' => $category->id,'type' => $gradeType);
-                        $DB->update_record('gradingform_multigraders_gra', $newrecord,TRUE);                   
-                    } 
+                        $DB->update_record('gradingform_multigraders_gra', $newrecord,TRUE);
+                    }
                 }
                 else
-                { 
-                    $error = get_string('err_grader_intermediary','gradingform_multigraders', $user_name);  
-                }   
+                {
+                    $error = get_string('err_grader_intermediary','gradingform_multigraders', $user_name);
+                }
             }
-            
+
         }
         return $grade;
     }
@@ -820,11 +820,12 @@ class gradingform_multigraders_instance extends gradingform_instance {
 
         $this->log .= 'validate_grading_element multigraders_delete_all:'.$elementvalue['multigraders_delete_all'].'. ';
         if(isset($elementvalue['multigraders_delete_all']) && $elementvalue['multigraders_delete_all']=='true') {
-            $this->log .= 'validate_grading_element ret true. ';
+            $this->log .= 'validate_grading_element ret true. ';;
             return true;
         }
 
-        if (!isset($elementvalue['grade']) || trim($elementvalue['grade']) == ''){
+
+         if (!isset($elementvalue['grade']) || !is_string($elementvalue['grade'])){
             return true;
         }
 
@@ -871,7 +872,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
                 $record->visible_to_students = (intval($record->visible_to_students)==1); //make DB int val into boolean.
                 $record->require_second_grader = (intval($record->require_second_grader)==1); //make DB int val into boolean.
                 $record->outcomes = json_decode($record->outcomes); //transform outcomes from JSON to object
-                $this->instanceGrades['grades'][$record->grader] = $record;               
+                $this->instanceGrades['grades'][$record->grader] = $record;
             }
         }
         return $this->instanceGrades;
@@ -936,7 +937,8 @@ class gradingform_multigraders_instance extends gradingform_instance {
         if(isset($data['outcome'])) {
             $outcomes =  json_encode($data['outcome']);
         }
-        if(isset($data['grade_hidden'])) {
+
+        if(isset($data['grade_hidden'])){
             $data['grade'] = $data['grade_hidden'];
         }
         //updating instanceid for all records of the same item
@@ -952,8 +954,11 @@ class gradingform_multigraders_instance extends gradingform_instance {
             }
         }
         //adding a new record
-        if(isset($data['grade']) && $data['grade'] !='') {
-
+        if(isset($data['grade']) &&
+            $data['grade'] !='' &&
+            is_array($data['grade']) &&
+            isset($data['grade'][$USER->id])) {
+                $data['grade'] = $data['grade'][$USER->id];
         }
         if($currentRecord !== null){
             $currentRecordID = $DB->get_field('gradingform_multigraders_gra','id',
@@ -1105,7 +1110,7 @@ class gradingform_multigraders_instance extends gradingform_instance {
     /**
      * Returns html for form element of type 'grading'.
      *
-     * @param moodle_page $page     
+     * @param moodle_page $page
      * @param MoodleQuickForm_grading $gradingformelement
      * @return string
      */
@@ -1144,9 +1149,13 @@ class gradingform_multigraders_instance extends gradingform_instance {
                     $values['grades'][$grader]->grade = $value['grade'];
                     $values['grades'][$grader]->type = $value['type'];
                     $values['grades'][$grader]->feedback = $value['feedback'];
-                    $values['grades'][$grader]->require_second_grader = $value['require_second_grader'];
+                    if($value['require_second_grader']){
+                        $values['grades'][$grader]->require_second_grader = $value['require_second_grader'];
+                    }
                     $values['grades'][$grader]->grade = $value['grade'];
-                    $values['grades'][$grader]->outcomes =  (object)$value['outcome'];
+                    if($value['outcome'] !== null){
+                        $values['grades'][$grader]->outcomes =  (object)$value['outcome'];
+                    }
                 }
             }
             if ($err = $this->validate_grading_element($value)) {
