@@ -732,10 +732,6 @@ class gradingform_multigraders_instance extends gradingform_instance {
     public function getGradeRange($forceRefresh = false){
         if($this->gradeRange == null || $forceRefresh) {
             $graderange = array_values($this->get_controller()->get_grade_range());
-            //handle non-int grade range
-            if(!is_numeric($graderange[0]) && !is_numeric($graderange[count($graderange) - 1])){
-                return null;
-            }
             if (!empty($graderange)) {
                 $this->gradeRange = new stdClass();
                 sort($graderange);
@@ -1208,7 +1204,11 @@ class gradingform_multigraders_instance extends gradingform_instance {
         $this->get_controller()->get_renderer($page)->display_form($form,$mode,$this->options, $values,  $gradingformelement->getName(),$this->validationErrors,$this->getGradeRange() );
 
         ob_start();
-        $form->display();
+        if($form !== null){
+            $form->display();
+        }else{
+            return null;
+        }
         ob_end_clean();
         return null;
     }

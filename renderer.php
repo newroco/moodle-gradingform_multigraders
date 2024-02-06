@@ -82,6 +82,9 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         $this->scaleid = null;
         $this->gradingDisabled = false;
 
+        if($form == null){
+            return;
+        }
         if($mode !== gradingform_multigraders_controller::DISPLAY_VIEW){
             $form->addElement('html','<div id="gradingform_multigraders" class="gradingform_multigraders">');
                 $form->addElement('html','<div class="gradingform_total">');
@@ -527,17 +530,20 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                             $readonly = 'readonly';
                             $disabled_scale='disabled';
                             $type='text';
-
-                            $name_grade_hidden=$this->elementName.'[grade_hidden]';
-                            $form->addElement('html','<input type="hidden" name="'.$name_grade_hidden.'" value="'. strval($value).'" class="grade_hidden_'.$record->grader.'">');
+                            if($commonAtts != 'disabled'){
+                                $name_grade_hidden=$this->elementName.'[grade_hidden]';
+                                $form->addElement('html','<input type="hidden" name="'.$name_grade_hidden.'" value="'. strval($value).'" class="grade_hidden">');
+                            }
+                            $class="grade_input_".$record->grader;
                         }else{
                             $readonly = '';
                             $disabled_scale= $commonAtts;
                             $type='number';
+                            $class="grade_input";
                         }
-                        $data_formula = $form->addElement('html', '<input type="' . $type . '" name="' . $name_grade . '" value="' .  strval($value) . '" data-formula="' . $this->outcomesCalculationFormula . '"
+                        $data_formula = $form->addElement('html', '<input type="' . $type . '" name="' . $name_grade . '" step="1"  value="' .  strval($value) . '" data-formula="' . $this->outcomesCalculationFormula . '"
                         title="' . $this->outcomesCalculationFormula . '" ' . ($data_grade_range_min !== null ? 'data-grade-range-min="' . $data_grade_range_min . '"' : '') . ' ' . ($data_grade_range_max !== null ? 'data-grade-range-max="' . $data_grade_range_max . '"' : '') . '
-                        ' . $disabled_scale . ' class="grade_input_'.$record->grader.'" ' . $readonly . ' >');
+                        ' . $disabled_scale . ' class='.$class.' ' . $readonly . ' >');
                     }
 
                     if($this->gradeRange) {

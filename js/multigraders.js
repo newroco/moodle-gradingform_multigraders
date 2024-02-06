@@ -115,8 +115,12 @@ M.gradingform_multigraders.init = function(Y, options) {
         }
     });
     //this code makes sure that the value of the input consists only of digits
-    Y.all('.multigraders_grade input.grade_input').on('keypress', function(event) {
-        if(event.ctrlKey){
+    Y.all('.multigraders_grade input.grade_input').on('change', function(event) {
+        let value = event.target.get('value');
+        let intValue = Math.round(parseFloat(value));
+        event.target.set('value', intValue);
+
+       /*  if(event.ctrlKey){
             return;
         }
         //event.charCode != 0 means the key has a character result that would show in the input
@@ -126,7 +130,7 @@ M.gradingform_multigraders.init = function(Y, options) {
             event.charCode != 190){
             event.preventDefault();
             return null;
-        }
+        } */
     });
 
     //this code updates the grade for each outcome update depending on the formula
@@ -205,25 +209,17 @@ M.gradingform_multigraders.updateGrade = function(element) {
         Y.one(element).ancestor(".multigraders_grade").one('input.grade_input_'+graderId+',select#id_advancedgrading_grade_'+graderId).set("title", formula);
         formula = formula.replace('=sum','');
         formula = formula.replace('=','');
-                    try {
-                grade = eval(formula);
-            } catch (anything) {
-                //nothing
-            }
-            //update grade value
-            if(grade == null || (typeof grade == Math.NaN) ){
-                grade = '';
-            }else{
-                grade = grade.toFixed(1);
-            }
-    }else{
-        //if there are outcomes but isNaN(gradeRangeMin) && isNaN(gradeRangeMax)
-        //there is a set formula for outcomes
-            formula = formula.replace(/##gi(\d+)##/gi,0);
-            Y.one(element).ancestor(".multigraders_grade").one('input.grade_input_'+graderId).set("title", formula);
-            formula = formula.replace('=sum','');
-            formula = formula.replace('=','');
+        try {
             grade = eval(formula);
+        } catch (anything) {
+            //nothing
+        }
+        //update grade value
+        if(grade == null || (typeof grade == Math.NaN) ){
+            grade = '';
+        }else{
+            grade = grade.toFixed(1);
+        }
     }
 
         const ancestor = Y.one(element).ancestor(".multigraders_grade");
@@ -260,10 +256,11 @@ M.gradingform_multigraders.updateGrade = function(element) {
 
             });
         }else {
-            let grade_input = jQuery(ancestor.getDOMNode()).find('input.grade_input_'+graderId+',input.grade_hidden_'+graderId);
-            let roundedGrade = Math.round(parseFloat(grade));
-            grade_input.val(roundedGrade);
-            gradeElement.set("value", roundedGrade);
+            let grade_input = jQuery(ancestor.getDOMNode()).find('input.grade_input_'+graderId+',input.grade_hidden');
+            let formula_point= (parseFloat(grade)*gradeRangeMax)/100;
+            let grade_point= Math.round(formula_point);
+            gradeElement.set("value",grade_point);
+            grade_input.val(grade_point);
         }
     }
 M.gradingform_multigraders.nl2br = function(str) {
