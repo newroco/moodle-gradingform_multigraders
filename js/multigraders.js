@@ -69,26 +69,57 @@ M.gradingform_multigraders.init = function(Y, options) {
             }
         }
     });
-        Y.all('.multigraders_grade .copy_button').on('click', function(e) {
-            const graderId= Y.one(e.currentTarget).ancestor(".multigraders_grade").one('.grader_id').get('text');
-            const graderName = Y.one(e.currentTarget).ancestor(".multigraders_grade").one('.grader_name').get('text');
-            const graderFeedbackElemnt = Y.one(e.currentTarget).ancestor(".multigraders_grade").one('[name^="advancedgrading[feedback]['+graderId+']"]');
-            let graderFeedback='';
 
-            if(graderFeedbackElemnt.hasClass('grader_feedback')){
-              graderFeedback =graderFeedbackElemnt.getHTML();
-            }else{
-               graderFeedback=graderFeedbackElemnt.get('value');
-            }
+//COPY BUTTON
+    Y.all('.multigraders_grade .copy_button').on('click', function(e) {
+        const graderId= Y.one(e.currentTarget).ancestor(".multigraders_grade").one('.grader_id').get('text');
+        const graderName = Y.one(e.currentTarget).ancestor(".multigraders_grade").one('.grader_name').get('text');
 
-            let currFeedback = Y.one('#id_assignfeedbackcomments_editoreditable').getHTML();
-            if(Y.one('#id_assignfeedbackcomments_editoreditable').get('text') != ''){
-                currFeedback += "<br/><br/>";
+            let graderFeedbackElemnt ='';
+            Y.all("[id^='advancedgrading_feedback_"+graderId+"']").each(function(node,index){
+                if(node.hasClass('tox-edit-area__iframe')){
+                    graderFeedbackElemnt = node.getDOMNode().contentDocument.body.innerHTML;
+                }else if(node.hasClass('editor_atto_content form-control') || node.hasClass('grader_feedback')){
+                    graderFeedbackElemnt = node.get('innerHTML');
+                }
+           });
+
+            let currFeedback='';
+            let isTinyMCE = false;
+            let Atto =false;
+            Y.all("[id^='id_assignfeedbackcomments_editor']").each(function(node,index){
+                if(node.hasClass('tox-edit-area__iframe')){
+                    isTinyMCE = true;
+                    currFeedbackComments = node.getDOMNode().contentDocument.body;
+                    if(currFeedbackComments.textContent !== ''){
+                        currFeedback +=currFeedbackComments.innerHTML;
+                    }else{
+                        currFeedback +=currFeedbackComments.textContent;
+                    }
+                }else if(node.hasClass('editor_atto_content')){
+                    Atto =true;
+                    if(node.get('text') !== ''){
+                        currFeedback = node.get('innerHTML');
+                    }else{
+                        currFeedback = node.get('text');
+                    }
+                }
+
+            let newFeedback = currFeedback + graderName + "<br/>---------------<br/>"+ M.gradingform_multigraders.nl2br(graderFeedbackElemnt)+'<br/>';
+
+            if(isTinyMCE){
+                Y.one("textarea[id^='id_assignfeedbackcomments_editor']").set('value', '');
+                const iframeBody = node.getDOMNode().contentDocument.body;
+                iframeBody.innerHTML = newFeedback;
+                tinyMCE.triggerSave();
+            }else if(Atto){
+                node.setHTML(newFeedback);
             }
-            const newFeedback = currFeedback + graderName + "<br/>---------------<br/>"+ M.gradingform_multigraders.nl2br(graderFeedback);
-            Y.one('#id_assignfeedbackcomments_editoreditable').setHTML(newFeedback);
-            Y.one('#id_assignfeedbackcomments_editoreditable').focus();
+            node.focus();
         });
+    });
+
+//DELETE BUTTON
         Y.all('.gradingform_multigraders .delete_button').on('click', function(e) {
         const yes = confirm('Are you sure?');
         if(yes){

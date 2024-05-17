@@ -82,7 +82,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         $this->scaleid = null;
         $this->gradingDisabled = false;
 
-        if($form == null){
+        if($form == null && $mode !== gradingform_multigraders_controller::DISPLAY_VIEW){
             return;
         }
         if($mode !== gradingform_multigraders_controller::DISPLAY_VIEW){
@@ -298,6 +298,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
             if($currentRecord && $userIsAllowedToGrade){
                 $currentRecord->allowEdit = true;
             }
+
             if ($mode == gradingform_multigraders_controller::DISPLAY_VIEW ||
                 $mode == gradingform_multigraders_controller::DISPLAY_REVIEW ||
                 $mode == gradingform_multigraders_controller::DISPLAY_EVAL ||
@@ -440,7 +441,9 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
             $form->addElement('html','</div>');
 
         }else{
-            return html_writer::tag('div',$output , array('class' => 'gradingform_multigraders'));
+            if($output != ''){
+                return html_writer::tag('div',$output , array('class' => 'gradingform_multigraders'));
+            }
         }
     }
 
@@ -448,7 +451,6 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         //show second feedback to students
          if( $record !== null){
             if($this->options->show_intermediary_to_students && $record->visible_to_students) {
-
                 $time = date(get_string('timestamp_format', 'gradingform_multigraders'), $record->timestamp);
                 $timeDiv = html_writer::tag('div', $time, array('class' => 'timestamp'));
                 $userDetails = html_writer::tag('div', '&nbsp;'.gradingform_multigraders_instance::get_user_url($record->grader), array('class' => 'grader'));
@@ -766,7 +768,13 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
             $return .= html_writer::start_tag('div', array('class' => 'advancedgrade'));
             $idx = 0;
             foreach ($instances as $instance) {
-                $return .= $this->display_instance($instance, $idx++, $cangrade);
+                $table= $this->display_instance($instance, $idx++, $cangrade);
+                if($table != ''){
+                    $return .= $table;
+                }else{
+                    //if null, does not display "Grade breakdown" in student view
+                    return;
+                }
             }
             $return .= html_writer::end_tag('div');
         }
@@ -801,7 +809,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         if($values !== null){
             $output .= $this->display_form(null,$mode, $options, $values);
         }
-        return $output.'display_instance';
+        return $output;
     }
 
     /**
