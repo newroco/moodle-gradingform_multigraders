@@ -1240,10 +1240,12 @@ class gradingform_multigraders_instance extends gradingform_instance {
      * @param int $itemID
      */
     public function send_second_graders_notification($sentByOwner = false, $firstGradeRecord = null,$itemID = null){
-        global $USER, $PAGE;
+        global $USER, $PAGE, $DB;
 
         $userID = self::get_userID_for_itemID($itemID);
         //$userID is now the ID of the user graded
+        $user = $DB->get_record('user', array('id' => $userID));
+        $user_name= fullname($user);
         $gradeeURL = self::get_user_url($userID);
 
         $grader = self::get_user_url($USER->id);
@@ -1273,19 +1275,23 @@ class gradingform_multigraders_instance extends gradingform_instance {
                     continue;
                 }
 
+                $contexturlname_mail = get_string('message_assign_name', 'gradingform_multigraders',$PAGE->cm->name);
+                $contexturlname_mail .= ' '.get_string('message_student_name', 'gradingform_multigraders',$user_name);
+                $subject_mail = get_string('message_subject', 'gradingform_multigraders',$contexturlname_mail);
+
                 $message = new \core\message\message();
                 $message->component = 'gradingform_multigraders';
                 $message->name = 'secondgrading';
                 $message->notification = 1;
                 $message->userfrom = $USER;
                 $message->userto = $userID;
-                $message->subject = $subject;
+                $message->subject = $subject_mail;
                 $message->fullmessage = strip_tags($fullmessagehtml);
                 $message->fullmessageformat = FORMAT_HTML;
                 $message->fullmessagehtml = $fullmessagehtml;
                 $message->smallmessage = $smallmessage;
                 $message->contexturl = $contextUrl;
-                $message->contexturlname = $contexturlname;
+                $message->contexturlname = $contexturlname_mail;
                 $message->replyto = core_user::get_noreply_user()->id;
                 $content = array('*' => array(
                     'header' => get_string('message_header', 'gradingform_multigraders'),
@@ -1311,13 +1317,15 @@ class gradingform_multigraders_instance extends gradingform_instance {
      * @param int $itemID
      */
     public function send_initial_grader_notification($firstGradeRecord = null,$itemID = null){
-        global $USER, $PAGE;
+        global $USER, $PAGE, $DB;
 
         if($firstGradeRecord->grader == $USER->id){
             return;
         }
 
         $userID = self::get_userID_for_itemID($itemID);
+        $user = $DB->get_record('user', array('id' => $userID));
+        $user_name= fullname($user);
         //$userID is now the ID of the user graded
         $gradeeURL = self::get_user_url($userID);
 
@@ -1334,20 +1342,24 @@ class gradingform_multigraders_instance extends gradingform_instance {
 
         $smallmessage = $subject;
 
+        $contexturlname_mail = get_string('message_assign_name', 'gradingform_multigraders',$PAGE->cm->name);
+        $contexturlname_mail .= ' '.get_string('message_student_name', 'gradingform_multigraders',$user_name);
+        $subject_mail = get_string('message_subject_to_initial', 'gradingform_multigraders',$contexturlname_mail);
+
         $message = new \core\message\message();
         $message->component = 'gradingform_multigraders';
         $message->name = 'secondgrading';
         $message->notification = 1;
         $message->userfrom = $USER;
         $message->userto = $firstGradeRecord->grader;
-        $message->subject = $subject;
+        $message->subject = $subject_mail;
         $message->fullmessage = strip_tags($fullmessagehtml);
         $message->fullmessageformat = FORMAT_HTML;
         $message->fullmessagehtml = $fullmessagehtml;
         $message->smallmessage = $smallmessage;
 
         $message->contexturl = $contextUrl;
-        $message->contexturlname = $contexturlname;
+        $message->contexturlname = $contexturlname_mail;
         $message->replyto =core_user::get_noreply_user()->id;
         $content = array('*' => array(
             'header' => get_string('message_header', 'gradingform_multigraders'),
