@@ -74,38 +74,57 @@ M.gradingform_multigraders.init = function(Y, options) {
     Y.all('.multigraders_grade .copy_button').on('click', function(e) {
         const graderId= Y.one(e.currentTarget).ancestor(".multigraders_grade").one('.grader_id').get('text');
         const graderName = Y.one(e.currentTarget).ancestor(".multigraders_grade").one('.grader_name').get('text');
+        let textareaFeedback=Y.one("textarea[id^='advancedgrading_feedback_"+graderId+"']");
+        let graderFeedback =Y.one("[id^='advancedgrading_feedback_"+graderId+"']");
 
-            let graderFeedbackElemnt ='';
-            Y.all("[id^='advancedgrading_feedback_"+graderId+"']").each(function(node,index){
-                if(node.hasClass('tox-edit-area__iframe')){
-                    graderFeedbackElemnt = node.getDOMNode().contentDocument.body.innerHTML;
-                }else if(node.hasClass('editor_atto_content form-control') || node.hasClass('grader_feedback')){
-                    graderFeedbackElemnt = node.get('innerHTML');
+        //Feedback in the Notes section
+        let graderFeedbackElemnt ='';
+            if(graderFeedback.hasClass('tox-edit-area__iframe')){ //TinyMCE editor
+                textareaFeedback.set('value', graderFeedback.getDOMNode().contentDocument.body.innerHTML);
+                graderFeedbackElemnt = textareaFeedback.get('value');
+            }else if(graderFeedback.hasClass('editor_atto_content form-control')){ //Atto HTML editor
+                textareaFeedback.set('value', graderFeedback.get('innerHTML'));
+                graderFeedbackElemnt = textareaFeedback.get('value');
+            }else if(graderFeedback == textareaFeedback && graderFeedback.hasClass('form-control')){ //Plain text area
+                textareaFeedback.set('value', graderFeedback.get('value'));
+                graderFeedbackElemnt = textareaFeedback.get('value');
+            }
+            else if(graderFeedback.hasClass('grader_feedback')){ //feedback second grader
+                graderFeedbackElemnt = graderFeedback.get('innerHTML');
+            }
+
+        let currFeedback='';
+        let isTinyMCE = false;
+        let Atto =false;
+
+        //Feedback comments section
+        let textareaFeedbackcomments = Y.one("textarea[id^='id_assignfeedbackcomments_editor']");
+        Y.all("[id^='id_assignfeedbackcomments_editor']").each(function(node,index){
+            if(node.hasClass('tox-edit-area__iframe')){ //TinyMCE editor
+                isTinyMCE = true;
+                currFeedbackComments = node.getDOMNode().contentDocument.body;
+                if(currFeedbackComments.textContent !== ''){
+                    textareaFeedbackcomments.set('value',currFeedbackComments.innerHTML);
+                }else{
+                    textareaFeedbackcomments.set('value',currFeedbackComments.textContent);
                 }
-           });
-
-            let currFeedback='';
-            let isTinyMCE = false;
-            let Atto =false;
-            Y.all("[id^='id_assignfeedbackcomments_editor']").each(function(node,index){
-                if(node.hasClass('tox-edit-area__iframe')){
-                    isTinyMCE = true;
-                    currFeedbackComments = node.getDOMNode().contentDocument.body;
-                    if(currFeedbackComments.textContent !== ''){
-                        currFeedback +=currFeedbackComments.innerHTML;
-                    }else{
-                        currFeedback +=currFeedbackComments.textContent;
-                    }
-                }else if(node.hasClass('editor_atto_content')){
-                    Atto =true;
-                    if(node.get('text') !== ''){
-                        currFeedback = node.get('innerHTML');
-                    }else{
-                        currFeedback = node.get('text');
-                    }
+            }else if(node.hasClass('editor_atto_content')){ //Atto HTML editor
+                Atto =true;
+                if(node.get('text') !== ''){
+                    textareaFeedbackcomments.set('value',node.get('innerHTML'));
+                }else{
+                    textareaFeedbackcomments.set('value', node.get('text'));
                 }
+            }else if(node == textareaFeedbackcomments){ //Plain text area
+                textareaFeedbackcomments.set('value',node.get('innerHTML'));
+            }
 
-            let newFeedback = currFeedback + graderName + "<br/>---------------<br/>"+ M.gradingform_multigraders.nl2br(graderFeedbackElemnt)+'<br/>';
+            currFeedback = textareaFeedbackcomments.get('value');
+            if(currFeedback !== ''){
+                currFeedback += "<br />";
+            }
+
+            let newFeedback = currFeedback + graderName + "<br />---------------<br />"+ M.gradingform_multigraders.nl2br(graderFeedbackElemnt);
 
             if(isTinyMCE){
                 Y.one("textarea[id^='id_assignfeedbackcomments_editor']").set('value', '');
@@ -114,8 +133,12 @@ M.gradingform_multigraders.init = function(Y, options) {
                 tinyMCE.triggerSave();
             }else if(Atto){
                 node.setHTML(newFeedback);
+                node.focus();
+            }else{
+                textareaFeedbackcomments.setHTML(newFeedback.replace(/<br\s*\/?>/g, '\n'));
+                textareaFeedbackcomments.focus();
             }
-            node.focus();
+
         });
     });
 
