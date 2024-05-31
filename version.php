@@ -28,4 +28,4 @@ $plugin->component  = 'gradingform_multigraders';
 $plugin->version    = 2024052021;
 $plugin->requires   = 2023012000;
 $plugin->maturity   = MATURITY_STABLE;
-$plugin->release    = '1.6';
+$plugin->release    = '1.8';
