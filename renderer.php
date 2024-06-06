@@ -158,7 +158,6 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
             $userIsAllowedToGrade = true;
             $previousRecord = null;
             $currentUserIsInSecondGradersList = false;
-
             if(isset($this->options->secondary_graders_id_list) &&
                 strstr($this->options->secondary_graders_id_list,$USER->id) !== FALSE ){
                 $currentUserIsInSecondGradersList = true;
@@ -309,6 +308,11 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                     //display all previous grading records in view mode
                     //if final grade was not given and this user added a grade, allow editing
                     foreach ($values['grades'] as $grader => $record) {
+                        if(strstr($this->options->secondary_graders_id_list,$record->grader) !== FALSE ){//check if the teacher is assigned for grading
+                            $record->currentUserIsInSecondGradersList= true;
+                        }else{
+                            $record->currentUserIsInSecondGradersList= false;
+                        }
                         $additionalClass = '';
                         if($this->options->blind_marking &&
                             !$allowFinalGradeEdit &&
@@ -328,7 +332,9 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
 
                              $output .= $this->display_student($record, $additionalClass);
                         }else{
-                             $this->display_grade($form, $record, $additionalClass, $mode);
+                            if($record->currentUserIsInSecondGradersList) {
+                                $this->display_grade($form, $record, $additionalClass, $mode);
+                            }
                         }
                     }
                 }
@@ -338,7 +344,8 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
             // if this is the first time this item is being graded
             if(($userIsAllowedToGrade || $allowFinalGradeEdit) &&
                 $currentRecord === null &&
-                !$this->gradingDisabled){
+                !$this->gradingDisabled &&
+                strstr($this->options->secondary_graders_id_list, $USER->id) !== FALSE){
                 echo 'in';
 
                 $additionalClass = '';
@@ -360,9 +367,19 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                     $newRecord->allowEdit = true;
                     $additionalClass = 'finalGrade';
                     $firstGradeRecord = $newRecord;
+
+                    if($mode !== gradingform_multigraders_controller::DISPLAY_VIEW){
+                        $this->display_grade($form, $newRecord, $additionalClass);
+                    }
                 }
-                if($mode !== gradingform_multigraders_controller::DISPLAY_VIEW){
-                    $this->display_grade($form, $newRecord, $additionalClass);
+                else{
+                    if($mode !== gradingform_multigraders_controller::DISPLAY_VIEW &&
+                     $firstGradeRecord != $currentRecord &&
+                    $previousRecord &&
+                     $previousRecord->require_second_grader &&
+                      $firstGradeRecord->require_second_grader){
+                        $this->display_grade($form, $newRecord, $additionalClass);
+                    }
                 }
             }
 
@@ -480,7 +497,6 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
         }else{
             $commonAtts='disabled';
         }
-
         $form->addElement('html','<div class="coursebox multigraders_grade '. $additionalClass.'">');
 
             //outcomes
@@ -573,7 +589,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                 $name_grader_feedback=$this->elementName . '[feedback]'. '['.$record->grader.']';
 
                 if($commonAtts == 'disabled'){
-                    $form->addElement('html','<div id="'.$id_grader_feedback.'" name="'.$name_grader_feedback.'" class="grader_feedback">'. $record->feedback.'</div>');
+                    $form->addElement('html','<div id="'.$id_grader_feedback.'" name="'.$name_grader_feedback.'" class="grader_feedback" >'. $record->feedback.'</div>');
                 }else{
                     $editor = $form->addElement('editor', $id_grader_feedback);
                     $editor->setValue( array('text' => $record->feedback) );
@@ -619,13 +635,15 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
 
 
             $value_ntf='false';
+            $checked_ntf='';
             if($this->options->show_notify_student_box){
                 $value_ntf='true';
+                $checked_ntf= 'checked';
             }
 
             $name_notify=$this->elementName . '[notify_student]';
             $form->addElement('html','<div class="int_notify_student">');
-                $form->addElement('html','<input id="input_notify_student" name="'.$name_notify.'" type="hidden" value="'.$value_ntf.'" ' .$checked.'>');
+                $form->addElement('html','<input id="input_notify_student" name="'.$name_notify.'" type="hidden" value="'.$value_ntf.'" ' .$checked_ntf.'>');
             $form->addElement('html','</div>');
 
             //final grade
@@ -701,7 +719,6 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                 $outcomes = $record->outcomes;
             }
             /*$echo = highlight_string("<?php\n\$obj =\n" . var_export($outcome, true) . ";\n?>");*/
-
             $val = -1;
             if($outcomes && isset($outcomes->$index)){
                 $val = $outcomes->$index;

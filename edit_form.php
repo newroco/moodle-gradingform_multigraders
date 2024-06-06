@@ -66,6 +66,7 @@ class gradingform_multigraders_editform extends moodleform {
         foreach ($graders as $grader) {
             $graders[$grader->id] = fullname($grader);
         }
+        asort($graders);
 
         $select = $form->addElement('select', 'secondary_graders_id_list',
                 get_string('secondary_graders', 'gradingform_multigraders'), $graders);
