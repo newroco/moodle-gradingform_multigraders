@@ -265,6 +265,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                 $firstGradeRecord->allowCopyingOfDataToFinal = true;
                 $userIsAllowedToGrade = true;
                 $allowFinalGradeEdit = true;
+                $currentUserIsInSecondGradersList = true;
             }
 
             //display the number of grades added
@@ -308,11 +309,6 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                     //display all previous grading records in view mode
                     //if final grade was not given and this user added a grade, allow editing
                     foreach ($values['grades'] as $grader => $record) {
-                        if(strstr($this->options->secondary_graders_id_list,$record->grader) !== FALSE ){//check if the teacher is assigned for grading
-                            $record->currentUserIsInSecondGradersList= true;
-                        }else{
-                            $record->currentUserIsInSecondGradersList= false;
-                        }
                         $additionalClass = '';
                         if($this->options->blind_marking &&
                             !$allowFinalGradeEdit &&
@@ -332,7 +328,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
 
                              $output .= $this->display_student($record, $additionalClass);
                         }else{
-                            if($record->currentUserIsInSecondGradersList) {
+                            if(strstr($this->options->secondary_graders_id_list,$record->grader) || $record->grader == $firstGradeRecord->grader){
                                 $this->display_grade($form, $record, $additionalClass, $mode);
                             }
                         }
@@ -344,8 +340,7 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
             // if this is the first time this item is being graded
             if(($userIsAllowedToGrade || $allowFinalGradeEdit) &&
                 $currentRecord === null &&
-                !$this->gradingDisabled &&
-                strstr($this->options->secondary_graders_id_list, $USER->id) !== FALSE){
+                !$this->gradingDisabled){
                 echo 'in';
 
                 $additionalClass = '';
@@ -377,7 +372,9 @@ class gradingform_multigraders_renderer extends plugin_renderer_base {
                      $firstGradeRecord != $currentRecord &&
                     $previousRecord &&
                      $previousRecord->require_second_grader &&
-                      $firstGradeRecord->require_second_grader){
+                      $firstGradeRecord->require_second_grader &&
+                      (strstr($this->options->secondary_graders_id_list,$USER->id) || $USER->id == $firstGradeRecord->grader)
+                      ){
                         $this->display_grade($form, $newRecord, $additionalClass);
                     }
                 }
