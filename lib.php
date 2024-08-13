@@ -142,8 +142,18 @@ class gradingform_multigraders_controller extends gradingform_controller {
         $newdefinition->show_intermediary_to_students = isset($newdefinition->show_intermediary_to_students) ? $newdefinition->show_intermediary_to_students : 0;
         $newdefinition->show_notify_student_box = isset($newdefinition->show_notify_student_box) ? $newdefinition->show_notify_student_box : 0;
 
-        $set = $newdefinition->secondary_graders_id_list;
-        $setd = implode(',', $set); // implode ids with comma
+
+        if(isset($newdefinition->secondary_graders_id_list)){
+            $set= $newdefinition->secondary_graders_id_list;
+            $setd = implode(',', $set);
+        }else{
+            $definitionExtras = $DB->get_record('gradingform_multigraders_def', array('id' => $newdefinition->copiedfromid), '*');
+            $setd = $definitionExtras->secondary_graders_id_list;
+            $newdefinition->auto_calculate_final_method = $definitionExtras->auto_calculate_final_method;
+            $newdefinition->criteria['text'] = $definitionExtras->criteria;
+        }
+
+       // implode ids with comma
         $newdefinition->secondary_graders_id_list = $setd;// stored in database table.
 
         foreach (array('status', 'name', 'description', 'secondary_graders_id_list', 'criteria', 'blind_marking', 'show_intermediary_to_students', 'auto_calculate_final_method','show_notify_student_box') as $key) {
