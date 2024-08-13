@@ -375,7 +375,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
      *
      * @return string
      */
-    public function get_formatted_description() {
+    public function get_formatted_description_multigraders() {
         if (!isset($this->definition->description)) {
             return '';
         }
@@ -489,7 +489,7 @@ class gradingform_multigraders_controller extends gradingform_controller {
         }
 
 
-        return $this->get_formatted_description($page);
+        return $this->get_formatted_description_multigraders($page);
     }
 
     /**
