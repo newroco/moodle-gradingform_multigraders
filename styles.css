@@ -178,7 +178,7 @@
      clear: both;
  }
 
- #fitem_id_advancedgrading{
+ #gradingform_multigraders #fitem_id_advancedgrading{
     display: none;
  }
 
