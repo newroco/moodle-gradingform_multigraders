@@ -295,12 +295,17 @@ M.gradingform_multigraders.updateGrade = function(element) {
                 if (isNaN(intVal)) {
                     intVal = parseInt(value,10);
                 }
-                if(intVal <= grade){
-                    if(Math.abs(prevIntGrade-grade) < (grade - intVal)){
+                 if(intVal < grade){
+                    if(prevIntGrade !== null){
                         gradeElements.val(prevGrade);
                         selectedGrade = prevIntGrade;
-                        return;
+                    } else {
+                        gradeElements.val(value);
+                        selectedGrade = intVal;
                     }
+                    return;
+                }
+                if(intVal == grade){
                     gradeElements.val(value);
                     selectedGrade = intVal;
                     return;
@@ -309,6 +314,10 @@ M.gradingform_multigraders.updateGrade = function(element) {
                 prevIntGrade = intVal;
 
             });
+
+            if(selectedGrade === null && prevGrade !== null){
+                gradeElements.val(prevGrade);
+            }
         }else {
             let grade_input = jQuery(ancestor.getDOMNode()).find('input.grade_input_'+graderId+',input.grade_hidden');
             let formula_point= (parseFloat(grade)*gradeRangeMax)/100;
